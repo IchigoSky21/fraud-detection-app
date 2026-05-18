@@ -5,8 +5,13 @@ import joblib
 import time
 
 # ── Load model & scaler ──────────────────────────────────────
-model  = joblib.load("fraud_model.pkl")
-scaler = joblib.load("scaler.pkl")
+@st.cache_resource
+def load_model():
+    model  = joblib.load("fraud_model.pkl")
+    scaler = joblib.load("scaler.pkl")
+    return model, scaler
+
+model, scaler = load_model()
 
 # ── Konfigurasi halaman ──────────────────────────────────────
 st.set_page_config(
