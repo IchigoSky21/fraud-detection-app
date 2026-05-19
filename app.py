@@ -4,9 +4,14 @@ import numpy as np
 import joblib
 import time
 
+# ── Inisialisasi Session State untuk History ──────────────────
+if "history" not in st.session_state:
+    st.session_state["history"] = []
+
 # ── Load model & scaler ──────────────────────────────────────
 @st.cache_resource
 def load_model():
+    # Ganti dengan pembuatan dummy model jika belum punya file pkl
     model  = joblib.load("fraud_model.pkl")
     scaler = joblib.load("scaler.pkl")
     return model, scaler
@@ -65,19 +70,30 @@ if mode == "Manual Input":
 
         # Output
         st.divider()
+        result_text = "Fraud" if prediction == 1 else "Legitimate"
         if prediction == 1:
             st.error("🚨 FRAUDULENT TRANSACTION")
         else:
             st.success("✅ LEGITIMATE TRANSACTION")
 
         col_a, col_b, col_c = st.columns(3)
-        col_a.metric("Prediksi",          "Fraud" if prediction == 1 else "Legitimate")
+        col_a.metric("Prediksi",          result_text)
         col_b.metric("Fraud Probability", f"{probability:.2%}")
         col_c.metric("Latency",           f"{latency:.1f} ms")
 
         # Progress bar probabilitas
         st.markdown("**Fraud Probability:**")
         st.progress(float(probability))
+        
+        # Simpan ke History
+        st.session_state["history"].append({
+            "Waktu": time.strftime("%H:%M:%S"),
+            "Mode": "Manual",
+            "Amount": f"${amount:,.2f}",
+            "Hasil": result_text,
+            "Probabilitas": f"{probability:.2%}",
+            "Latency": f"{latency:.1f} ms"
+        })
 
 # ════════════════════════════════════════════════════════════
 # MODE 2 — Upload CSV
@@ -121,6 +137,16 @@ else:
 
             st.dataframe(df_upload[["Prediction", "Fraud_Probability"] + required_cols])
 
+            # Simpan ke History
+            st.session_state["history"].append({
+                "Waktu": time.strftime("%H:%M:%S"),
+                "Mode": f"CSV Batch ({len(preds)} baris)",
+                "Amount": "N/A",
+                "Hasil": f"{n_fraud} Fraud / {n_legit} Legit",
+                "Probabilitas": "N/A",
+                "Latency": f"{latency:.1f} ms"
+            })
+
             # Download hasil
             csv_out = df_upload.to_csv(index=False).encode("utf-8")
             st.download_button(
@@ -129,6 +155,24 @@ else:
                 file_name = "fraud_prediction_results.csv",
                 mime      = "text/csv"
             )
+
+# ════════════════════════════════════════════════════════════
+# HISTORI PREDIKSI
+# ════════════════════════════════════════════════════════════
+st.divider()
+st.subheader("🕒 Riwayat Prediksi Sesi Ini")
+
+if len(st.session_state["history"]) > 0:
+    # Membalik urutan agar yang terbaru muncul di atas
+    df_history = pd.DataFrame(st.session_state["history"])[::-1].reset_index(drop=True)
+    st.dataframe(df_history, use_container_width=True)
+    
+    # Tombol untuk menghapus histori
+    if st.button("🗑️ Hapus Riwayat"):
+        st.session_state["history"] = []
+        st.rerun()
+else:
+    st.info("Belum ada transaksi yang diprediksi pada sesi ini.")
 
 # ── Footer ───────────────────────────────────────────────────
 st.divider()
