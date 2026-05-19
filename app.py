@@ -19,246 +19,213 @@ if "history" not in st.session_state:
 
 # ── Page config ───────────────────────────────────────────────
 st.set_page_config(
-    page_title = "FraudShield — Fraud Detection",
-    page_icon  = "🛡️",
+    page_title = "Fraud Detection App",
+    page_icon  = "🔍",
     layout     = "centered"
 )
 
-# ── Custom CSS ────────────────────────────────────────────────
+# ── Custom CSS (adaptive light/dark) ─────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
-/* ── Base ── */
 html, body, [class*="css"] {
     font-family: 'DM Sans', sans-serif;
 }
 
-.stApp {
-    background: #0a0e1a;
-    background-image:
-        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56,139,253,0.15) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(99,60,180,0.10) 0%, transparent 60%);
-    color: #e2e8f0;
+/* ══ LIGHT MODE ══ */
+@media (prefers-color-scheme: light) {
+    .stApp {
+        background: #dbeafe;
+        background-image:
+            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59,130,246,0.18) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 40% at 85% 85%, rgba(96,165,250,0.12) 0%, transparent 60%);
+    }
+    .card              { background: rgba(255,255,255,0.75); border: 1px solid rgba(59,130,246,0.18); }
+    .card-title        { color: #1d4ed8; }
+    .hero-title        { color: #1e3a5f; }
+    .hero-sub          { color: #475569; }
+    .hero-badge        { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.35); color: #1d4ed8; }
+    .metric-box        { background: rgba(219,234,254,0.8); border-color: rgba(59,130,246,0.15); }
+    .metric-label      { color: #64748b; }
+    .metric-value      { color: #1e3a5f; }
+    .metric-value.speed{ color: #1d4ed8; }
+    .metric-value.fraud{ color: #dc2626; }
+    .metric-value.legit{ color: #16a34a; }
+    .history-header    { color: #1e3a5f; }
+    .history-empty     { color: #64748b; border-color: rgba(59,130,246,0.2); }
+    .footer            { color: #94a3b8; }
+    .section-divider   { border-color: rgba(59,130,246,0.15); }
+    .prob-bar-bg       { background: rgba(59,130,246,0.12); }
 }
 
-/* ── Hero banner ── */
+/* ══ DARK MODE ══ */
+@media (prefers-color-scheme: dark) {
+    .stApp {
+        background: #0c1a3a;
+        background-image:
+            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(29,78,216,0.20) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 40% at 85% 85%, rgba(37,99,235,0.12) 0%, transparent 60%);
+        color: #e2e8f0;
+    }
+    .card              { background: rgba(15,30,70,0.85); border: 1px solid rgba(59,130,246,0.15); }
+    .card-title        { color: #60a5fa; }
+    .hero-title        { color: #eff6ff; }
+    .hero-sub          { color: #94a3b8; }
+    .hero-badge        { background: rgba(59,130,246,0.15); border-color: rgba(96,165,250,0.35); color: #60a5fa; }
+    .metric-box        { background: rgba(15,30,70,0.9); border-color: rgba(255,255,255,0.07); }
+    .metric-label      { color: #94a3b8; }
+    .metric-value      { color: #eff6ff; }
+    .metric-value.speed{ color: #60a5fa; }
+    .metric-value.fraud{ color: #f87171; }
+    .metric-value.legit{ color: #4ade80; }
+    .history-header    { color: #eff6ff; }
+    .history-empty     { color: #94a3b8; border-color: rgba(255,255,255,0.1); }
+    .footer            { color: #475569; }
+    .section-divider   { border-color: rgba(255,255,255,0.07); }
+    .prob-bar-bg       { background: rgba(255,255,255,0.07); }
+}
+
+/* ══ SHARED STYLES ══ */
 .hero {
     text-align: center;
-    padding: 2.5rem 1rem 1.5rem;
+    padding: 2.2rem 1rem 1.4rem;
     margin-bottom: 1rem;
 }
 .hero-badge {
     display: inline-block;
-    background: rgba(56,139,253,0.15);
-    border: 1px solid rgba(56,139,253,0.35);
-    color: #58a6ff;
     font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 0.3rem 1rem;
+    padding: 0.28rem 0.9rem;
     border-radius: 999px;
-    margin-bottom: 1rem;
+    border: 1px solid;
+    margin-bottom: 0.9rem;
 }
 .hero-title {
     font-family: 'Syne', sans-serif;
-    font-size: 2.6rem;
+    font-size: 2.4rem;
     font-weight: 800;
     line-height: 1.15;
-    color: #f0f6ff;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.55rem;
     letter-spacing: -0.02em;
 }
-.hero-title span {
-    background: linear-gradient(90deg, #58a6ff, #a371f7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
 .hero-sub {
-    color: #8b949e;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 300;
-    max-width: 420px;
+    max-width: 400px;
     margin: 0 auto;
     line-height: 1.6;
 }
-
-/* ── Cards ── */
 .card {
-    background: rgba(22, 27, 42, 0.85);
-    border: 1px solid rgba(56,139,253,0.12);
-    border-radius: 16px;
-    padding: 1.6rem;
-    margin-bottom: 1.2rem;
-    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1.1rem;
+    backdrop-filter: blur(10px);
 }
 .card-title {
     font-family: 'Syne', sans-serif;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #58a6ff;
-    margin-bottom: 1rem;
+    margin-bottom: 0.9rem;
 }
-
-/* ── Result boxes ── */
 .result-fraud {
-    background: linear-gradient(135deg, rgba(248,81,73,0.15), rgba(200,40,40,0.08));
-    border: 1px solid rgba(248,81,73,0.40);
-    border-radius: 14px;
-    padding: 1.4rem 1.6rem;
+    background: linear-gradient(135deg, rgba(220,38,38,0.12), rgba(185,28,28,0.06));
+    border: 1px solid rgba(220,38,38,0.35);
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
     text-align: center;
-    margin: 1rem 0;
+    margin: 0.9rem 0;
 }
 .result-legit {
-    background: linear-gradient(135deg, rgba(63,185,80,0.15), rgba(40,160,60,0.08));
-    border: 1px solid rgba(63,185,80,0.40);
-    border-radius: 14px;
-    padding: 1.4rem 1.6rem;
+    background: linear-gradient(135deg, rgba(22,163,74,0.12), rgba(15,118,55,0.06));
+    border: 1px solid rgba(22,163,74,0.35);
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
     text-align: center;
-    margin: 1rem 0;
+    margin: 0.9rem 0;
 }
 .result-label {
     font-family: 'Syne', sans-serif;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
 }
-.result-fraud .result-label { color: #f85149; }
-.result-legit .result-label { color: #3fb950; }
-.result-icon { font-size: 2.2rem; margin-bottom: 0.3rem; }
-
-/* ── Metrics row ── */
+.result-fraud .result-label { color: #dc2626; }
+.result-legit .result-label { color: #16a34a; }
 .metrics-row {
     display: flex;
-    gap: 0.8rem;
-    margin: 1rem 0;
+    gap: 0.75rem;
+    margin: 0.9rem 0;
 }
 .metric-box {
     flex: 1;
-    background: rgba(30, 37, 56, 0.9);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 0.9rem 1rem;
+    border-radius: 10px;
+    border: 1px solid;
+    padding: 0.8rem 0.9rem;
     text-align: center;
 }
 .metric-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #8b949e;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.25rem;
 }
 .metric-value {
     font-family: 'Syne', sans-serif;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    color: #f0f6ff;
 }
-.metric-value.fraud  { color: #f85149; }
-.metric-value.legit  { color: #3fb950; }
-.metric-value.speed  { color: #58a6ff; }
-
-/* ── Progress bar ── */
-.prob-bar-wrap {
-    margin: 0.8rem 0 0.3rem;
-}
-.prob-bar-label {
-    font-size: 0.75rem;
-    color: #8b949e;
-    margin-bottom: 0.4rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-}
-.prob-bar-bg {
-    background: rgba(255,255,255,0.07);
-    border-radius: 999px;
-    height: 8px;
-    overflow: hidden;
-}
-.prob-bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #f85149, #ff9500);
-    transition: width 0.6s ease;
-}
-
-/* ── History ── */
+.prob-bar-wrap  { margin: 0.7rem 0 0.2rem; }
+.prob-bar-label { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.35rem; color: #94a3b8; }
+.prob-bar-bg    { border-radius: 999px; height: 7px; overflow: hidden; }
+.prob-bar-fill  { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ef4444, #f97316); }
+.pill-row { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.pill     { padding: 0.28rem 0.8rem; border-radius: 999px; font-size: 0.76rem; font-weight: 600; border: 1px solid; }
+.pill-total { background: rgba(59,130,246,0.12);  color: #3b82f6; border-color: rgba(59,130,246,0.3); }
+.pill-fraud { background: rgba(220,38,38,0.12);   color: #dc2626; border-color: rgba(220,38,38,0.3); }
+.pill-legit { background: rgba(22,163,74,0.12);   color: #16a34a; border-color: rgba(22,163,74,0.3); }
 .history-header {
     font-family: 'Syne', sans-serif;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
-    color: #f0f6ff;
-    margin-bottom: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 .history-empty {
-    color: #8b949e;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     text-align: center;
-    padding: 1.5rem;
-    border: 1px dashed rgba(255,255,255,0.1);
-    border-radius: 12px;
+    padding: 1.4rem;
+    border: 1px dashed;
+    border-radius: 10px;
 }
+.section-divider { border: none; border-top: 1px solid; margin: 1.6rem 0; }
 
-/* ── Summary pills ── */
-.pill-row {
-    display: flex;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-.pill {
-    padding: 0.3rem 0.9rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-.pill-total  { background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3); }
-.pill-fraud  { background: rgba(248,81,73,0.15);  color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
-.pill-legit  { background: rgba(63,185,80,0.15);  color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
-
-/* ── Section divider ── */
-.section-divider {
-    border: none;
-    border-top: 1px solid rgba(255,255,255,0.07);
-    margin: 1.8rem 0;
-}
-
-/* ── Streamlit overrides ── */
-.stRadio > label { color: #8b949e !important; font-size: 0.85rem !important; }
-.stRadio [data-testid="stMarkdownContainer"] p { color: #c9d1d9 !important; }
-div[data-baseweb="tab-list"] { background: rgba(22,27,42,0.8) !important; border-radius: 10px !important; }
+/* Streamlit overrides */
 .stButton > button {
-    background: linear-gradient(135deg, #1f6feb, #388bfd) !important;
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 10px !important;
     font-family: 'Syne', sans-serif !important;
     font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    padding: 0.65rem 1.2rem !important;
-    letter-spacing: 0.03em !important;
+    font-size: 0.92rem !important;
+    padding: 0.6rem 1.1rem !important;
+    letter-spacing: 0.02em !important;
     transition: opacity 0.2s !important;
 }
-.stButton > button:hover { opacity: 0.88 !important; }
-.stNumberInput > label  { color: #8b949e !important; font-size: 0.8rem !important; }
-.stFileUploader > label { color: #8b949e !important; }
+.stButton > button:hover { opacity: 0.85 !important; }
+.stNumberInput > label { font-size: 0.8rem !important; }
 div[data-testid="stDataFrame"] { border-radius: 10px !important; overflow: hidden !important; }
-.stAlert { border-radius: 10px !important; }
 
-/* ── Footer ── */
 .footer {
     text-align: center;
-    color: #484f58;
-    font-size: 0.75rem;
-    padding: 2rem 0 1rem;
-    letter-spacing: 0.04em;
+    font-size: 0.73rem;
+    padding: 1.8rem 0 0.8rem;
+    letter-spacing: 0.03em;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -268,24 +235,24 @@ div[data-testid="stDataFrame"] { border-radius: 10px !important; overflow: hidde
 # ════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="hero">
-    <div class="hero-badge">🛡️ ML-Powered Security</div>
-    <div class="hero-title">Fraud<span>Shield</span></div>
-    <div class="hero-sub">Real-time credit card fraud detection powered by Random Forest machine learning.</div>
+    <div class="hero-badge">Machine Learning · Binary Classification</div>
+    <div class="hero-title">Transaction Fraud Detection</div>
+    <div class="hero-sub">Detect whether a credit card transaction is fraudulent or legitimate using a trained Random Forest model.</div>
 </div>
 """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
 # MODE SELECTOR
 # ════════════════════════════════════════════════════════════
-st.markdown('<div class="card"><div class="card-title">⚙️ Input Mode</div>', unsafe_allow_html=True)
-mode = st.radio("", ["✍️  Manual Input", "📂  Upload CSV"], horizontal=True, label_visibility="collapsed")
+st.markdown('<div class="card"><div class="card-title">Input Mode</div>', unsafe_allow_html=True)
+mode = st.radio("", ["Manual Input", "Upload CSV"], horizontal=True, label_visibility="collapsed")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
 # MODE 1 — Manual Input
 # ════════════════════════════════════════════════════════════
-if "Manual" in mode:
-    st.markdown('<div class="card"><div class="card-title">📝 Transaction Features</div>', unsafe_allow_html=True)
+if mode == "Manual Input":
+    st.markdown('<div class="card"><div class="card-title">Transaction Features</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     feature_values = {}
@@ -301,11 +268,11 @@ if "Manual" in mode:
                 f"V{i}", value=0.0, format="%.6f", key=f"v{i}"
             )
 
-    amount = st.number_input("💰 Amount (transaction value)", value=0.0, min_value=0.0, format="%.2f")
+    amount = st.number_input("Amount (transaction value)", value=0.0, min_value=0.0, format="%.2f")
     feature_values["Amount"] = amount
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if st.button("🔎  Run Fraud Detection", use_container_width=True):
+    if st.button("Predict", use_container_width=True):
         df_input = pd.DataFrame([feature_values])
         df_input["Amount"] = scaler.transform(df_input[["Amount"]])
 
@@ -314,23 +281,20 @@ if "Manual" in mode:
         probability = model.predict_proba(df_input)[0][1]
         latency     = (time.time() - start) * 1000
 
-        # Result box
         if prediction == 1:
-            st.markdown(f"""
+            st.markdown("""
             <div class="result-fraud">
-                <div class="result-icon">🚨</div>
                 <div class="result-label">FRAUDULENT TRANSACTION</div>
             </div>""", unsafe_allow_html=True)
         else:
-            st.markdown(f"""
+            st.markdown("""
             <div class="result-legit">
-                <div class="result-icon">✅</div>
                 <div class="result-label">LEGITIMATE TRANSACTION</div>
             </div>""", unsafe_allow_html=True)
 
-        # Metrics
         pred_class = "fraud" if prediction == 1 else "legit"
         pred_label = "Fraud" if prediction == 1 else "Legitimate"
+
         st.markdown(f"""
         <div class="metrics-row">
             <div class="metric-box">
@@ -354,8 +318,7 @@ if "Manual" in mode:
         </div>
         """, unsafe_allow_html=True)
 
-        # Save to history
-        record = {"Hasil": "🚨 Fraud" if prediction == 1 else "✅ Legitimate"}
+        record = {"Result": "Fraud" if prediction == 1 else "Legitimate"}
         record.update({f"V{i}": round(feature_values[f"V{i}"], 4) for i in range(1, 29)})
         record["Amount"] = amount
         st.session_state.history.append(record)
@@ -364,9 +327,8 @@ if "Manual" in mode:
 # MODE 2 — Upload CSV
 # ════════════════════════════════════════════════════════════
 else:
-    st.markdown('<div class="card"><div class="card-title">📂 Batch Prediction via CSV</div>', unsafe_allow_html=True)
-    st.markdown('<p style="color:#8b949e;font-size:0.85rem;">CSV must contain columns: <code>V1</code> to <code>V28</code> and <code>Amount</code> (no <code>id</code> or <code>Class</code> column)</p>', unsafe_allow_html=True)
-
+    st.markdown('<div class="card"><div class="card-title">Batch Prediction via CSV</div>', unsafe_allow_html=True)
+    st.caption("CSV must contain columns V1 to V28 and Amount (no id or Class column)")
     uploaded_file = st.file_uploader("", type=["csv"], label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -386,7 +348,7 @@ else:
             probs   = model.predict_proba(df_process)[:, 1]
             latency = (time.time() - start) * 1000
 
-            df_upload["Prediction"]        = ["🚨 Fraud" if p == 1 else "✅ Legitimate" for p in preds]
+            df_upload["Prediction"]        = ["Fraud" if p == 1 else "Legitimate" for p in preds]
             df_upload["Fraud_Probability"] = [f"{p:.2%}" for p in probs]
 
             n_fraud = int(sum(preds))
@@ -394,10 +356,10 @@ else:
 
             st.markdown(f"""
             <div class="pill-row">
-                <span class="pill pill-total">📊 Total: {len(preds)}</span>
-                <span class="pill pill-fraud">🚨 Fraud: {n_fraud}</span>
-                <span class="pill pill-legit">✅ Legitimate: {n_legit}</span>
-                <span class="pill pill-total">⚡ {latency:.1f} ms</span>
+                <span class="pill pill-total">Total: {len(preds)}</span>
+                <span class="pill pill-fraud">Fraud: {n_fraud}</span>
+                <span class="pill pill-legit">Legitimate: {n_legit}</span>
+                <span class="pill pill-total">Latency: {latency:.1f} ms</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -408,16 +370,15 @@ else:
 
             csv_out = df_upload.to_csv(index=False).encode("utf-8")
             st.download_button(
-                label     = "⬇️  Download Results CSV",
-                data      = csv_out,
-                file_name = "fraud_prediction_results.csv",
-                mime      = "text/csv",
-                use_container_width=True
+                label              = "Download Results CSV",
+                data               = csv_out,
+                file_name          = "fraud_prediction_results.csv",
+                mime               = "text/csv",
+                use_container_width= True
             )
 
-            # Save to history
             for pred, row in zip(preds, df_upload[required_cols].itertuples(index=False)):
-                record = {"Hasil": "🚨 Fraud" if pred == 1 else "✅ Legitimate"}
+                record = {"Result": "Fraud" if pred == 1 else "Legitimate"}
                 record.update({f"V{i}": round(getattr(row, f"V{i}"), 4) for i in range(1, 29)})
                 record["Amount"] = row.Amount
                 st.session_state.history.append(record)
@@ -426,30 +387,30 @@ else:
 # HISTORY
 # ════════════════════════════════════════════════════════════
 st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-st.markdown('<div class="history-header">📋 Prediction History <span style="color:#8b949e;font-size:0.75rem;font-weight:400;">(this session)</span></div>', unsafe_allow_html=True)
+st.markdown('<div class="history-header">Prediction History &nbsp;<span style="font-size:0.72rem;font-weight:400;opacity:0.5;">(this session only)</span></div>', unsafe_allow_html=True)
 
 if len(st.session_state.history) == 0:
-    st.markdown('<div class="history-empty">No predictions yet — results will appear here after each detection.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="history-empty">No predictions yet. Results will appear here after each detection.</div>', unsafe_allow_html=True)
 else:
     df_history = pd.DataFrame(st.session_state.history)
     df_history.index = range(1, len(df_history) + 1)
     df_history.index.name = "No"
 
     total = len(df_history)
-    fraud = df_history["Hasil"].str.contains("Fraud").sum()
+    fraud = df_history["Result"].str.contains("Fraud").sum()
     legit = total - fraud
 
     st.markdown(f"""
     <div class="pill-row">
-        <span class="pill pill-total">📊 Total: {total}</span>
-        <span class="pill pill-fraud">🚨 Fraud: {fraud}</span>
-        <span class="pill pill-legit">✅ Legitimate: {legit}</span>
+        <span class="pill pill-total">Total: {total}</span>
+        <span class="pill pill-fraud">Fraud: {fraud}</span>
+        <span class="pill pill-legit">Legitimate: {legit}</span>
     </div>
     """, unsafe_allow_html=True)
 
     st.dataframe(df_history, use_container_width=True)
 
-    if st.button("🗑️  Clear History", use_container_width=True):
+    if st.button("Clear History", use_container_width=True):
         st.session_state.history = []
         st.rerun()
 
@@ -458,7 +419,7 @@ else:
 # ════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="footer">
-    FraudShield &nbsp;·&nbsp; Transaction Fraud Detection &nbsp;·&nbsp;
-    Machine Learning Project &nbsp;·&nbsp; LK01 Group 6 &nbsp;·&nbsp; Binus University 2026
+    Transaction Fraud Detection &nbsp;·&nbsp; Machine Learning Project &nbsp;·&nbsp;
+    LK01 Group 6 &nbsp;·&nbsp; Binus University 2026
 </div>
 """, unsafe_allow_html=True)
