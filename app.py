@@ -4,14 +4,22 @@ import numpy as np
 import joblib
 import time
 
-# ── Inisialisasi Session State untuk History ──────────────────
+# ── Inisialisasi Session State untuk History & Input ──────────
 if "history" not in st.session_state:
     st.session_state["history"] = []
+
+# Fungsi untuk mengisi data sampel (Fitur 5)
+def set_sample_data(is_fraud=False):
+    # Data ilustrasi. Pada fraud, variansi biasanya lebih ekstrim
+    for i in range(1, 29):
+        # Angka acak sekedar simulasi: Normal (kecil), Fraud (ekstrim)
+        val = np.random.uniform(-4.0, 4.0) if is_fraud else np.random.uniform(-0.5, 0.5)
+        st.session_state[f"v{i}"] = float(val)
+    st.session_state["amount_input"] = 850.50 if is_fraud else 25.00
 
 # ── Load model & scaler ──────────────────────────────────────
 @st.cache_resource
 def load_model():
-    # Ganti dengan pembuatan dummy model jika belum punya file pkl
     model  = joblib.load("fraud_model.pkl")
     scaler = joblib.load("scaler.pkl")
     return model, scaler
@@ -25,10 +33,37 @@ st.set_page_config(
     layout     = "centered"
 )
 
+# ════════════════════════════════════════════════════════════
+# FITUR 4: GLOBAL FEATURE IMPORTANCE (Sidebar)
+# ════════════════════════════════════════════════════════════
+st.sidebar.title("📊 Model Insights")
+st.sidebar.markdown("Menampilkan fitur (variabel) mana yang paling mempengaruhi keputusan AI.")
+
+# Mengecek atribut model untuk Feature Importance
+try:
+    feature_names = [f"V{i}" for i in range(1, 29)] + ["Amount"]
+    importances = None
+    
+    if hasattr(model, "feature_importances_"):
+        importances = model.feature_importances_
+    elif hasattr(model, "coef_"):
+        importances = np.abs(model.coef_[0]) # Ambil nilai absolut untuk Regresi Logistik/Linear
+        
+    if importances is not None and len(importances) == len(feature_names):
+        # Ambil 10 fitur teratas
+        df_imp = pd.DataFrame({"Importance": importances}, index=feature_names)
+        df_imp = df_imp.sort_values(by="Importance", ascending=True).tail(10)
+        st.sidebar.markdown("**Top 10 Fitur Paling Berpengaruh**")
+        st.sidebar.bar_chart(df_imp, height=350)
+    else:
+        st.sidebar.info("Model tidak memiliki atribut Feature Importance.")
+except Exception as e:
+    st.sidebar.info("Gagal memuat Feature Importance.")
+
+# ── HEADER UTAMA ─────────────────────────────────────────────
 st.title("🔍 Transaction Fraud Detection")
 st.markdown("Masukkan data transaksi untuk mendeteksi apakah transaksi tersebut **fraudulent** atau **legitimate**.")
 
-# ── Pilih mode input ─────────────────────────────────────────
 mode = st.radio("Pilih mode input:", ["Manual Input", "Upload CSV"])
 
 # ════════════════════════════════════════════════════════════
@@ -36,6 +71,14 @@ mode = st.radio("Pilih mode input:", ["Manual Input", "Upload CSV"])
 # ════════════════════════════════════════════════════════════
 if mode == "Manual Input":
     st.subheader("Input Fitur Transaksi")
+    
+    # FITUR 5: Tombol Data Sampel
+    st.markdown("**Gunakan Data Sampel:**")
+    btn1, btn2, _ = st.columns([1, 1, 2])
+    btn1.button("✅ Sampel Normal", on_click=set_sample_data, args=(False,), use_container_width=True)
+    btn2.button("🚨 Sampel Fraud", on_click=set_sample_data, args=(True,), use_container_width=True)
+    
+    st.markdown("---")
 
     col1, col2 = st.columns(2)
     feature_values = {}
@@ -54,15 +97,15 @@ if mode == "Manual Input":
                 f"V{i}", value=0.0, format="%.6f", key=f"v{i}"
             )
 
-    amount = st.number_input("Amount (nilai transaksi)", value=0.0, min_value=0.0, format="%.2f")
+    amount = st.number_input("Amount (nilai transaksi)", value=0.0, min_value=0.0, format="%.2f", key="amount_input")
     feature_values["Amount"] = amount
 
-    if st.button("🔎 Prediksi", use_container_width=True):
+    if st.button("🔎 Prediksi Manual", use_container_width=True, type="primary"):
         # Preprocessing
         df_input = pd.DataFrame([feature_values])
         df_input["Amount"] = scaler.transform(df_input[["Amount"]])
 
-        # Inference + ukur latency
+        # Inference
         start = time.time()
         prediction = model.predict(df_input)[0]
         probability = model.predict_proba(df_input)[0][1]
@@ -81,8 +124,6 @@ if mode == "Manual Input":
         col_b.metric("Fraud Probability", f"{probability:.2%}")
         col_c.metric("Latency",           f"{latency:.1f} ms")
 
-        # Progress bar probabilitas
-        st.markdown("**Fraud Probability:**")
         st.progress(float(probability))
         
         # Simpan ke History
@@ -100,14 +141,12 @@ if mode == "Manual Input":
 # ════════════════════════════════════════════════════════════
 else:
     st.subheader("Upload File CSV")
-    st.markdown("CSV harus memiliki kolom: `V1` hingga `V28` dan `Amount` (tanpa kolom `id` dan `Class`).")
+    st.markdown("CSV harus memiliki kolom: `V1` hingga `V28` dan `Amount`.")
 
     uploaded_file = st.file_uploader("Pilih file CSV", type=["csv"])
 
     if uploaded_file is not None:
         df_upload = pd.read_csv(uploaded_file)
-
-        # Validasi kolom
         required_cols = [f"V{i}" for i in range(1, 29)] + ["Amount"]
         missing = [c for c in required_cols if c not in df_upload.columns]
 
@@ -127,13 +166,19 @@ else:
 
             st.success(f"✅ Prediksi selesai untuk {len(df_upload)} transaksi dalam {latency:.1f} ms")
 
-            # Ringkasan
+            # Ringkasan Angka
             n_fraud = sum(preds)
             n_legit = len(preds) - n_fraud
             c1, c2, c3 = st.columns(3)
             c1.metric("Total Transaksi", len(preds))
             c2.metric("🚨 Fraud",        n_fraud)
             c3.metric("✅ Legitimate",   n_legit)
+
+            # FITUR 3: Visualisasi Hasil CSV Sederhana
+            st.markdown("#### 📊 Distribusi Prediksi")
+            # Membuat DataFrame kecil khusus untuk visualisasi
+            chart_df = pd.DataFrame({"Jumlah": [n_legit, n_fraud]}, index=["Legitimate", "Fraud"])
+            st.bar_chart(chart_df, height=250)
 
             st.dataframe(df_upload[["Prediction", "Fraud_Probability"] + required_cols])
 
@@ -149,12 +194,7 @@ else:
 
             # Download hasil
             csv_out = df_upload.to_csv(index=False).encode("utf-8")
-            st.download_button(
-                label     = "⬇️ Download Hasil Prediksi",
-                data      = csv_out,
-                file_name = "fraud_prediction_results.csv",
-                mime      = "text/csv"
-            )
+            st.download_button("⬇️ Download Hasil Prediksi", csv_out, "fraud_prediction_results.csv", "text/csv")
 
 # ════════════════════════════════════════════════════════════
 # HISTORI PREDIKSI
@@ -163,17 +203,16 @@ st.divider()
 st.subheader("🕒 Riwayat Prediksi Sesi Ini")
 
 if len(st.session_state["history"]) > 0:
-    # Membalik urutan agar yang terbaru muncul di atas
     df_history = pd.DataFrame(st.session_state["history"])[::-1].reset_index(drop=True)
     st.dataframe(df_history, use_container_width=True)
     
-    # Tombol untuk menghapus histori
-    if st.button("🗑️ Hapus Riwayat"):
-        st.session_state["history"] = []
-        st.rerun()
+    col_hist1, col_hist2 = st.columns([1, 4])
+    with col_hist1:
+        if st.button("🗑️ Hapus Riwayat", use_container_width=True):
+            st.session_state["history"] = []
+            st.rerun()
 else:
     st.info("Belum ada transaksi yang diprediksi pada sesi ini.")
 
-# ── Footer ───────────────────────────────────────────────────
 st.divider()
-st.caption("Transaction Fraud Detection")
+st.caption("Transaction Fraud Detection App | Powered by Streamlit")
