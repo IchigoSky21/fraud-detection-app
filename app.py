@@ -3,16 +3,20 @@ import pandas as pd
 import numpy as np
 import joblib
 import time
+import random
 
 # ── Inisialisasi Session State ────────────────────────────────
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
-# ── Fungsi Data Sampel (Diperbaiki dengan data representatif) ─
-def set_sample_data(is_fraud=False):
+# ── Fungsi Data Sampel Acak (Satu Tombol) ─────────────────────
+def set_sample_data():
+    # Memilih secara acak 50:50 antara pola Normal atau Fraud
+    is_fraud = random.choice([True, False])
+    
     if is_fraud:
-        # Pola umum dari transaksi Fraud (nilai negatif ekstrim pada V3, V14, V17)
-        sample = {
+        # Pola dasar dari transaksi Fraud
+        base_sample = {
             "v1": -2.3, "v2": 1.5, "v3": -4.2, "v4": 3.8, "v5": -1.2,
             "v6": -1.4, "v7": -2.8, "v8": 1.1, "v9": -1.5, "v10": -3.5,
             "v11": 2.2, "v12": -4.0, "v13": 0.5, "v14": -5.5, "v15": 0.2,
@@ -20,10 +24,10 @@ def set_sample_data(is_fraud=False):
             "v21": 0.5, "v22": -0.2, "v23": 0.1, "v24": -0.3, "v25": 0.2,
             "v26": 0.4, "v27": 0.5, "v28": 0.1
         }
-        st.session_state["amount_input"] = 125.50
+        base_amount = 125.50
     else:
-        # Pola umum dari transaksi Normal (nilai di sekitar 0)
-        sample = {
+        # Pola dasar dari transaksi Normal
+        base_sample = {
             "v1": 1.2, "v2": 0.1, "v3": 0.5, "v4": 0.2, "v5": -0.1,
             "v6": -0.2, "v7": 0.1, "v8": -0.1, "v9": 0.3, "v10": -0.1,
             "v11": 0.1, "v12": 0.4, "v13": -0.2, "v14": 0.3, "v15": 1.0,
@@ -31,10 +35,13 @@ def set_sample_data(is_fraud=False):
             "v21": -0.1, "v22": -0.2, "v23": 0.1, "v24": 0.0, "v25": 0.2,
             "v26": -0.1, "v27": 0.0, "v28": 0.0
         }
-        st.session_state["amount_input"] = 25.00
+        base_amount = 25.00
         
-    for key, val in sample.items():
-        st.session_state[key] = val
+    # Menambahkan sedikit noise (variasi acak) agar angkanya dinamis setiap kali diklik
+    for key, val in base_sample.items():
+        st.session_state[key] = val + float(np.random.uniform(-0.1, 0.1))
+        
+    st.session_state["amount_input"] = base_amount + float(np.random.uniform(-5.0, 15.0))
 
 # ── Load model & scaler ──────────────────────────────────────
 @st.cache_resource
@@ -75,11 +82,8 @@ mode = st.radio("Pilih mode input:", ["Manual Input", "Upload CSV"])
 if mode == "Manual Input":
     st.subheader("Input Fitur Transaksi")
     
-    st.markdown("**Gunakan Data Sampel:**")
-    btn1, btn2, _ = st.columns([1, 1, 2])
-    btn1.button("✅ Sampel Normal", on_click=set_sample_data, args=(False,), use_container_width=True)
-    btn2.button("🚨 Sampel Fraud", on_click=set_sample_data, args=(True,), use_container_width=True)
-    
+    # TOMBOL SAMPEL TUNGGAL
+    st.button("🎲 Isi Data Sampel Acak", on_click=set_sample_data, use_container_width=True)
     st.markdown("---")
 
     col1, col2 = st.columns(2)
@@ -103,7 +107,7 @@ if mode == "Manual Input":
         start = time.time()
         probability = model.predict_proba(df_input)[0][1]
         
-        # MENGGUNAKAN THRESHOLD DARI SIDEBAR
+        # Menggunakan Threshold dari Sidebar
         prediction = 1 if probability >= threshold else 0
         latency = (time.time() - start) * 1000  
 
@@ -126,7 +130,7 @@ if mode == "Manual Input":
             "Mode": "Manual",
             "Amount": f"${amount:,.2f}",
             "Probabilitas": f"{probability:.2%}",
-            "Threshold Digunakan": f"{threshold:.2f}",
+            "Threshold": f"{threshold:.2f}",
             "Hasil": result_text,
             "Latency": f"{latency:.1f} ms"
         })
@@ -154,7 +158,7 @@ else:
             start = time.time()
             probs = model.predict_proba(df_process)[:, 1]
             
-            # MENGGUNAKAN THRESHOLD DARI SIDEBAR UNTUK BATCH CSV
+            # Menggunakan Threshold dari Sidebar
             preds = [1 if p >= threshold else 0 for p in probs]
             latency = (time.time() - start) * 1000
 
@@ -178,7 +182,7 @@ else:
                 "Mode": f"CSV Batch ({len(preds)} baris)",
                 "Amount": "N/A",
                 "Probabilitas": "N/A",
-                "Threshold Digunakan": f"{threshold:.2f}",
+                "Threshold": f"{threshold:.2f}",
                 "Hasil": f"{n_fraud} Fraud / {n_legit} Legit",
                 "Latency": f"{latency:.1f} ms"
             })
