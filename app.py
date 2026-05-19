@@ -516,6 +516,6 @@ else:
 st.markdown("""
 <div class="footer">
     FraudShield &nbsp;·&nbsp; Transaction Fraud Detection &nbsp;·&nbsp;
-    Machine Learning Project &nbsp;·&nbsp; ;·&nbsp;
+    Machine Learning Project &nbsp;·&nbsp; LK01 Group 6 &nbsp;·&nbsp; Binus University 2026
 </div>
 """, unsafe_allow_html=True)
