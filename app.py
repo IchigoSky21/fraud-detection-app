@@ -272,7 +272,6 @@ else:
 # ════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="footer">
-    Transaction Fraud Detection &nbsp;·&nbsp; Machine Learning Project &nbsp;·&nbsp;
-    LK01 Group 6 &nbsp;·&nbsp; Binus University 2026
+    Transaction Fraud Detection &nbsp;
 </div>
 """, unsafe_allow_html=True)
