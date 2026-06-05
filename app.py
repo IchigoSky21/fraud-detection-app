@@ -1,11 +1,11 @@
 import streamlit as st
+from streamlit_option_menu import option_menu  # <-- Library baru untuk menu profesional
 import pandas as pd
 import numpy as np
 import joblib
 import time
 
 # ── 1. PAGE CONFIGURATION ──────────────────────────────────────
-# Pastikan ini berada paling atas sebelum elemen UI lainnya
 st.set_page_config(
     page_title="Fraud Detection System",
     page_icon="💳",
@@ -31,28 +31,45 @@ try:
 except Exception as e:
     st.error(f"Gagal memuat model. Pastikan file .pkl berada di folder yang sama. Error: {e}")
 
-# ── 4. SIDEBAR NAVIGATION ──────────────────────────────────────
-# Logo dan Nama Brand di pojok kiri atas
-col_logo, col_text = st.sidebar.columns([1, 4])
-with col_logo:
-    st.image("https://cdn-icons-png.flaticon.com/512/2097/2097983.png", width=40)
-with col_text:
-    st.markdown("<h3 style='margin-top: -5px; color: #1e293b;'>SecurePay AI</h3>", unsafe_allow_html=True)
-
-st.sidebar.markdown("---")
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to:", ["💳 Detection Dashboard", "⚙️ How It Works", "👥 About Us"])
-
-st.sidebar.markdown("---")
-st.sidebar.info("Sistem Pendeteksi Penipuan Transaksi berbasis Random Forest Classifier.")
+# ── 4. SIDEBAR NAVIGATION (PROFESSIONAL MENU) ──────────────────
+with st.sidebar:
+    # Logo dan Nama Brand di pojok kiri atas
+    col_logo, col_text = st.columns([1, 4])
+    with col_logo:
+        st.image("https://cdn-icons-png.flaticon.com/512/2097/2097983.png", width=40)
+    with col_text:
+        st.markdown("<h3 style='margin-top: -5px; color: #1e293b;'>SecurePay AI</h3>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Navigation Bar Profesional
+    page = option_menu(
+        menu_title=None,  # Dikosongkan agar lebih bersih
+        options=["Dashboard", "How It Works", "About Us"],
+        icons=["shield-check", "diagram-3", "people-fill"],  # Menggunakan icon Bootstrap asli
+        default_index=0,
+        styles={
+            "container": {"padding": "0!important", "background-color": "transparent"},
+            "icon": {"font-size": "18px"}, 
+            "nav-link": {
+                "font-size": "15px", 
+                "text-align": "left", 
+                "margin": "5px 0px", 
+                "border-radius": "8px",
+                "font-family": "sans-serif"
+            },
+            "nav-link-selected": {"background-color": "#2563eb", "color": "white", "font-weight": "bold"},
+        }
+    )
+    
+    st.markdown("---")
+    st.info("Sistem Pendeteksi Penipuan Transaksi berbasis Random Forest Classifier.")
 
 # ═══════════════════════════════════════════════════════════════
 # PAGE 1: DETECTION DASHBOARD
 # ═══════════════════════════════════════════════════════════════
-if page == "💳 Detection Dashboard":
-    # Banner gambar dipindah ke sini khusus untuk Dashboard
+if page == "Dashboard":
     st.image("https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_column_width=True)
-    
     st.title("💳 Transaction Fraud Detection")
     st.markdown("Masukkan detail transaksi di bawah ini untuk mendapatkan analisis risiko secara *real-time*.")
     
@@ -123,7 +140,6 @@ if page == "💳 Detection Dashboard":
                 
                 df_input = pd.DataFrame([raw])
                 
-                # Pastikan kolom sesuai model
                 for col in feature_names:
                     if col not in df_input.columns:
                         df_input[col] = 0
@@ -133,10 +149,9 @@ if page == "💳 Detection Dashboard":
                 scale_cols = ['amt', 'city_pop', 'age', 'distance_km', 'zip']
                 df_input[scale_cols] = scaler.transform(df_input[scale_cols])
 
-                # Predict & Threshold Logic (15%)
+                # Predict
                 probability = model.predict_proba(df_input)[0][1]
                 is_fraud = 1 if probability > 0.15 else 0
-                
                 latency = (time.time() - start_time) * 1000
 
                 # ── UI Results ──
@@ -155,7 +170,7 @@ if page == "💳 Detection Dashboard":
                 
                 st.progress(float(probability), text="Risk Level Indicator")
 
-                # ── Menyimpan ke Riwayat (History) ──
+                # Menyimpan ke Riwayat
                 record = {
                     "Result": "🚨 Fraud" if is_fraud else "✅ Legitimate",
                     "Risk": f"{probability:.1%}",
@@ -170,19 +185,17 @@ if page == "💳 Detection Dashboard":
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat memproses data: {str(e)}")
 
-    # ── Menampilkan Riwayat (History) ──
+    # ── Menampilkan Riwayat ──
     st.divider()
     st.subheader("🕰️ Session History")
     
     if len(st.session_state.history) == 0:
         st.info("Belum ada transaksi yang diuji pada sesi ini.")
     else:
-        # Menampilkan Dataframe
         df_history = pd.DataFrame(st.session_state.history)
         df_history.index = range(1, len(df_history) + 1)
         st.dataframe(df_history, use_container_width=True)
         
-        # Tombol Clear History
         if st.button("Clear History", type="primary"):
             st.session_state.history = []
             st.rerun()
@@ -190,7 +203,7 @@ if page == "💳 Detection Dashboard":
 # ═══════════════════════════════════════════════════════════════
 # PAGE 2: HOW IT WORKS
 # ═══════════════════════════════════════════════════════════════
-elif page == "⚙️ How It Works":
+elif page == "How It Works":
     st.image("https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_column_width=True)
     st.title("Bagaimana Sistem Ini Bekerja?")
     
@@ -223,7 +236,7 @@ elif page == "⚙️ How It Works":
 # ═══════════════════════════════════════════════════════════════
 # PAGE 3: ABOUT US
 # ═══════════════════════════════════════════════════════════════
-elif page == "👥 About Us":
+elif page == "About Us":
     st.image("https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_column_width=True)
     st.title("Tentang Kami")
     
