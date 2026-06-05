@@ -155,7 +155,6 @@ if page == "Dashboard":
                 latency = (time.time() - start_time) * 1000
 
                 # ── UI Results ──
-                # ── UI Results ──
                 st.divider()
                 st.subheader("Hasil Analisis")
                 
@@ -169,35 +168,7 @@ if page == "Dashboard":
                 met2.metric("Risk Probability", f"{probability:.1%}")
                 met3.metric("Inference Latency", f"{latency:.1f} ms")
                 
-                # --- KODE SPEEDOMETER PLOTLY DITARUH DI SINI ---
-                fig = go.Figure(go.Indicator(
-                    mode = "gauge+number",
-                    value = probability * 100,
-                    number = {'suffix': "%", 'font': {'size': 40}},
-                    domain = {'x': [0, 1], 'y': [0, 1]},
-                    title = {'text': "Risk Level Indicator", 'font': {'size': 20}},
-                    gauge = {
-                        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                        'bar': {'color': "rgba(0,0,0,0)"}, # Menyembunyikan bar utama agar lebih bersih
-                        'bgcolor': "white",
-                        'borderwidth': 2,
-                        'bordercolor': "#e2e8f0",
-                        'steps': [
-                            {'range': [0, 15], 'color': "#dcfce3"},   # Hijau (Aman)
-                            {'range': [15, 50], 'color': "#fef08a"},  # Kuning (Waspada)
-                            {'range': [50, 100], 'color': "#fee2e2"}  # Merah (Bahaya)
-                        ],
-                        'threshold': {
-                            'line': {'color': "#dc2626", 'width': 6}, # Garis jarum penunjuk
-                            'thickness': 1,
-                            'value': probability * 100
-                        }
-                    }
-                ))
-                # Menyesuaikan tinggi grafik agar tidak terlalu memakan tempat
-                fig.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=20))
-                st.plotly_chart(fig, use_container_width=True)
-                # -----------------------------------------------
+                st.progress(float(probability), text="Risk Level Indicator")
 
                 # Menyimpan ke Riwayat
                 record = {
