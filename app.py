@@ -186,20 +186,16 @@ elif page == "👥 About Us":
     st.title("Tentang Kami")
     
     st.markdown("""
-    Kami adalah tim pengembang yang terdiri dari mahasiswa jurusan *Software Engineering* dan *Machine Learning* dari **Institut Pertanian Bogor (IPB)**.
     
-    Aplikasi web ini dikembangkan sebagai bagian dari tugas proyek akhir / purwarupa (*Proof of Concept*) untuk mendemonstrasikan implementasi algoritma kecerdasan buatan dalam memecahkan masalah industri finansial yang nyata.
-    
-    **Komitmen Kami:**
-    Fokus utama kelompok kami adalah mengawinkan arsitektur *Software Engineering* yang responsif dengan model *Machine Learning* yang tangguh. Kami percaya bahwa model AI sehebat apa pun hanya akan berguna jika dapat di-*deploy* ke dalam antarmuka yang ramah pengguna, berlatensi rendah, dan mampu menghasilkan keputusan bisnis yang dapat diinterpretasikan.
+    Aplikasi web ini dikembangkan sebagai bagian dari tugas proyek akhir / purwarupa (*Proof of Concept*) untuk mendemonstrasikan implementasi algoritma kecerdasan buatan dalam memecahkan masalah industri finansial.
     
     ---
-    **Tim Pengembang (Kelompok Kami):**
-    * Anggota 1 - [Nama Anda]
-    * Anggota 2 - [Nama Anggota]
-    * Anggota 3 - [Nama Anggota]
-    * Anggota 4 - [Nama Anggota]
-    * Anggota 5 - [Nama Anggota]
+    **Tim Kami:**
+    * Anggota 1 - [Felix Zonattan]
+    * Anggota 2 - [Jason Benoit Adianto]
+    * Anggota 3 - [Keivan Aliegery Indriartho]
+    * Anggota 4 - [Ivander Sanusi]
+    * Anggota 5 - [Haposan Emmanuel Tobias]
     
-    *(Hak Cipta © 2026 - IPB University)*
+    *(Hak Cipta © 2026)*
     """)
