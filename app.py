@@ -38,7 +38,7 @@ with st.sidebar:
     with col_logo:
         st.image("https://cdn-icons-png.flaticon.com/512/2097/2097983.png", width=40)
     with col_text:
-        st.markdown("<h3 style='margin-top: -5px; color: #1e293b;'>SecurePay AI</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-top: -5px; color: #1e293b;'>Fraud Detect AI</h3>", unsafe_allow_html=True)
     
     st.markdown("---")
     
