@@ -229,7 +229,7 @@ elif page == "How It Works":
     2. **Preprocessing** 👉 Konversi data teks (Kategori/Negara) menjadi angka matematis (Label Encoding).
     3. **Standardization** 👉 Penyetaraan skala angka menggunakan *StandardScaler*.
     4. **Inference** 👉 Model *Random Forest* mengambil *voting* dari 100 pohon keputusan.
-    5. **Decision Output** 👉 Jika persentase risiko > 15%, blokir transaksi dalam waktu < 100 milidetik!
+    5. **Decision Output** 👉 Jika persentase risiko > 15%, peringatan waspada
     """)
 
 
