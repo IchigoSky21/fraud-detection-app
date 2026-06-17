@@ -8,7 +8,7 @@
 
 **Fraud Detection AI** adalah sistem pemantauan cerdas berbasis web *real-time* yang ditenagai oleh algoritma **Random Forest Classifier** yang telah dioptimalkan. Sistem ini mengevaluasi 10 atribut transaksional utama secara simultan (seperti jarak geografis, waktu pemrosesan, dan nominal pengeluaran) untuk menghasilkan probabilitas risiko penipuan dalam hitungan milidetik guna menghentikan aktivitas ilegal sebelum mengompromikan jaringan finansial perbankan.
 
-Purwarupa aplikasi ini dirancang khusus untuk memenuhi studi kasus industri finansial yang menghadapi tantangan ketimpangan data ekstrem (*extreme class imbalance*).
+Aplikasi ini dibuat khusus untuk memenuhi studi kasus industri finansial yang menghadapi tantangan ketimpangan data ekstrem (*extreme class imbalance*).
 
 ---
 
