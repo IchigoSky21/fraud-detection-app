@@ -21,11 +21,10 @@ Aplikasi ini dibuat khusus untuk memenuhi studi kasus industri finansial yang me
 
 ## ✨ Fitur Utama Sistem / Key Features
 
-1. **Real-Time Risk Inference:** Melakukan prediksi klasifikasi risiko transaksi dengan latensi rendah (kurang dari 60 milidetik).
+1. **Real-Time Risk Inference:** Melakukan prediksi klasifikasi risiko transaksi dengan latensi rendah.
 2. **Custom Threshold Optimization (15%):** Menggeser batas keputusan bawaan (50%) menjadi 15% berdasarkan matriks risiko perbankan guna mendeteksi transaksi penipuan semaksimal mungkin (*High Recall Strategy*).
-3. **Interactive Visual Dashboard:** Mengintegrasikan komponen *Risk Gauge Meter* menggunakan Plotly untuk indikator visual tingkat bahaya transaksi yang instan dan intuitif.
-4. **Session History Management:** Menyediakan pencatatan log riwayat pengujian interaktif selama sesi berlangsung yang dapat dihapus secara berkala (*Clear Session*).
-5. **Explainable AI Pipeline:** Transparansi alur kerja data mulai dari rekayasa fitur (*Feature Engineering*) hingga visualisasi korelasi data makro.
+3. **Session History Management:** Menyediakan pencatatan log riwayat pengujian interaktif selama sesi berlangsung yang dapat dihapus secara berkala (*Clear Session*).
+4. **Explainable AI Pipeline:** Transparansi alur kerja data mulai dari rekayasa fitur (*Feature Engineering*) hingga visualisasi korelasi data makro.
 
 ---
 
