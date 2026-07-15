@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 220" width="100%" height="180">
+  <defs>
+    <linearGradient id="heroGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="60%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="220" rx="18" fill="url(#heroGrad2)"/>
+  <g stroke="#60a5fa" stroke-width="2.5" opacity="0.6" fill="none">
+    <circle cx="150" cy="110" r="26"/>
+    <circle cx="330" cy="70" r="26"/>
+    <circle cx="330" cy="150" r="26"/>
+    <circle cx="510" cy="110" r="26"/>
+    <line x1="176" y1="110" x2="304" y2="70"/>
+    <line x1="176" y1="110" x2="304" y2="150"/>
+    <line x1="356" y1="70" x2="484" y2="110"/>
+    <line x1="356" y1="150" x2="484" y2="110"/>
+  </g>
+  <text x="600" y="100" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" fill="white">Bagaimana Sistem Ini Bekerja?</text>
+  <text x="600" y="132" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#cbd5e1">Pipeline machine learning di balik deteksi fraud</text>
+</svg>
