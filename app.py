@@ -8,11 +8,9 @@ import plotly.graph_objects as go
 from pathlib import Path
 
 # ── 1. PAGE CONFIGURATION ──────────────────────────────────────
-# [Rekomendasi #1] layout="wide" agar form 2 kolom & hasil analisis
-# tidak berdesakan di layar besar.
 st.set_page_config(
-    page_title="Fraud Detect AI",
-    page_icon="🛡️",
+    page_title="Fraud Detect AI — Berkas Kasus",
+    page_icon="🗂️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -20,50 +18,272 @@ st.set_page_config(
 ASSETS_DIR = Path(__file__).parent / "assets"
 
 
-def render_svg(filename: str, height: str = "180px"):
-    """[Rekomendasi #2] Render SVG lokal (bukan hotlink Unsplash/Flaticon).
-    Aset disimpan di /assets sehingga tidak tergantung koneksi eksternal
-    dan konsisten dengan warna brand (#2563eb)."""
+def render_svg(filename: str):
+    """Render SVG lokal dari /assets."""
     svg_path = ASSETS_DIR / filename
     if svg_path.exists():
-        svg_content = svg_path.read_text()
-        st.markdown(
-            f'<div style="width:100%; margin-bottom:14px;">{svg_content}</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown(f'<div class="svg-wrap">{svg_path.read_text()}</div>', unsafe_allow_html=True)
     else:
         st.warning(f"Aset {filename} tidak ditemukan.")
 
 
-# ── 2. GLOBAL CSS ───────────────────────────────────────────────
+# ── 2. DESIGN SYSTEM: "BERKAS KASUS" (CASE FILE) ───────────────
+# Konsep: aplikasi ini pada dasarnya adalah meja investigasi fraud —
+# dunianya adalah map arsip, cap tinta, kop surat resmi, dan buku besar,
+# bukan dashboard SaaS generik. Palet warna kertas tua + tinta,
+# bukan hitam-neon atau krem-terracotta yang jadi default AI generatif.
 st.markdown("""
 <style>
-    .risk-card {
-        border-radius: 14px;
-        padding: 22px 26px;
-        margin-top: 8px;
-        border: 1px solid #e2e8f0;
-    }
-    .risk-card.fraud { background-color: #fef2f2; border-color: #fecaca; }
-    .risk-card.legit { background-color: #f0fdf4; border-color: #bbf7d0; }
-    .model-badge {
-        display: inline-block;
-        background-color: #eff6ff;
-        color: #1e3a8a;
-        border: 1px solid #bfdbfe;
-        border-radius: 8px;
-        padding: 4px 10px;
-        font-size: 12px;
-        margin: 3px 4px 3px 0;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,600;0,700;1,400&family=Special+Elite&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --paper: #E8E1CE;
+    --paper-light: #F4EFE1;
+    --ink: #2B2620;
+    --ink-navy: #24344D;
+    --ink-navy-dark: #17233A;
+    --stamp-red: #9C2B1B;
+    --stamp-green: #33512E;
+    --stamp-amber: #A6740A;
+    --rule: #B9AD8F;
+    --tape: #D8CBA0;
+}
+
+/* ── Base ── */
+[data-testid="stAppViewContainer"], .stApp {
+    background-color: var(--paper);
+}
+[data-testid="stHeader"] {
+    background-color: var(--paper);
+}
+html, body, [class*="css"] {
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--ink);
+}
+h1, h2, h3 {
+    font-family: 'Zilla Slab', Georgia, serif !important;
+    color: var(--ink-navy) !important;
+}
+hr { border-color: var(--rule) !important; }
+[data-testid="stCaptionContainer"], .stCaption { color: #6b6046 !important; }
+
+/* ── Sidebar = folder spine ── */
+[data-testid="stSidebar"] {
+    background-color: var(--ink-navy);
+    border-right: 1px solid var(--ink-navy-dark);
+}
+[data-testid="stSidebar"] * { color: var(--paper-light) !important; }
+[data-testid="stSidebar"] h3 { color: var(--paper-light) !important; }
+[data-testid="stSidebar"] hr { border-color: rgba(244,239,225,0.22) !important; }
+.svg-wrap svg { display: block; }
+
+.brand-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    color: var(--tape) !important;
+    text-transform: uppercase;
+    margin-top: -4px;
+}
+
+/* ── Stamped status block (sidebar) ── */
+.stamp-block {
+    border: 1.5px solid var(--tape);
+    background-color: rgba(244,239,225,0.06);
+    padding: 12px 14px;
+    margin: 10px 0 14px 0;
+    transform: rotate(-0.4deg);
+}
+.stamp-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    padding: 3px 0;
+    border-bottom: 1px dotted rgba(244,239,225,0.25);
+}
+.stamp-row:last-child { border-bottom: none; }
+.stamp-label { letter-spacing: 0.08em; color: var(--tape) !important; }
+.stamp-value { font-weight: 600; color: var(--paper-light) !important; }
+.sidebar-note {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--tape) !important;
+    border-left: 2px solid var(--stamp-red);
+    padding-left: 10px;
+}
+
+/* ── Case file letterhead header ── */
+.case-header {
+    background-color: var(--paper-light);
+    border: 1px solid var(--rule);
+    border-left: 6px solid var(--ink-navy);
+    padding: 20px 26px 22px 26px;
+    margin-bottom: 22px;
+}
+.case-header-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-navy);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    opacity: 0.75;
+}
+.case-title {
+    font-family: 'Zilla Slab', Georgia, serif !important;
+    font-weight: 700;
+    font-size: 2.1rem;
+    color: var(--ink-navy) !important;
+    margin: 0 0 6px 0;
+    line-height: 1.15;
+}
+.case-subtitle {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-style: italic;
+    color: #5a5138;
+    font-size: 0.98rem;
+    margin: 0;
+}
+
+/* ── Form section tags (lettered — a real intake form has real sections) ── */
+.section-tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background-color: var(--ink-navy);
+    color: var(--paper-light);
+    padding: 3px 9px;
+    margin-bottom: 8px;
+}
+
+/* ── Buttons ── */
+.stButton button, [data-testid="stFormSubmitButton"] button {
+    background-color: var(--ink-navy) !important;
+    color: var(--paper-light) !important;
+    border: 1px solid var(--ink-navy-dark) !important;
+    border-radius: 2px !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 13px !important;
+}
+.stButton button:hover, [data-testid="stFormSubmitButton"] button:hover {
+    background-color: var(--stamp-red) !important;
+    border-color: var(--stamp-red) !important;
+}
+
+/* ── Inputs ── */
+[data-testid="stNumberInput"] input, [data-testid="stTextInput"] input,
+[data-baseweb="select"] > div {
+    background-color: var(--paper-light) !important;
+    border-color: var(--rule) !important;
+    border-radius: 2px !important;
+    color: var(--ink) !important;
+    font-family: 'IBM Plex Mono', monospace !important;
+}
+
+/* ── Metrics ── */
+[data-testid="stMetricValue"] {
+    font-family: 'IBM Plex Mono', monospace !important;
+    color: var(--ink-navy) !important;
+}
+[data-testid="stMetricLabel"] {
+    font-family: 'IBM Plex Sans', sans-serif !important;
+    text-transform: uppercase;
+    font-size: 11.5px !important;
+    letter-spacing: 0.05em;
+    color: #6b6046 !important;
+}
+
+/* ── Bordered containers (result card) ── */
+.st-key-verdict_card {
+    background-color: var(--paper-light) !important;
+    border: 1px solid var(--rule) !important;
+    border-radius: 2px !important;
+}
+
+/* ── The signature element: an ink verdict stamp ── */
+.verdict-stamp {
+    display: inline-block;
+    font-family: 'Special Elite', 'IBM Plex Mono', monospace;
+    font-size: 1.55rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 24px;
+    border: 4px double var(--stamp-color);
+    color: var(--stamp-color);
+    transform: rotate(-6deg);
+    opacity: 0.9;
+    mix-blend-mode: multiply;
+    margin-bottom: 10px;
+}
+.verdict-detail {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: #5a5138;
+    margin-top: 2px;
+}
+
+/* ── Evidence / heuristic list ── */
+.evidence-list { list-style: none; padding-left: 0; margin: 6px 0; }
+.evidence-list li {
+    position: relative;
+    padding: 7px 0 7px 24px;
+    border-bottom: 1px dashed var(--rule);
+    font-size: 0.92rem;
+}
+.evidence-list li:before {
+    content: "§";
+    position: absolute; left: 2px;
+    color: var(--stamp-amber);
+    font-weight: 700;
+}
+
+/* ── SOP / procedure box ── */
+.sop-box {
+    border: 1px solid var(--rule);
+    border-left: 6px solid var(--ink-navy);
+    background-color: var(--paper-light);
+    padding: 18px 24px;
+    margin: 14px 0 20px 0;
+}
+.sop-header {
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    color: var(--ink-navy);
+    margin-bottom: 10px;
+}
+.sop-list { margin: 0; padding-left: 20px; }
+.sop-list li { margin-bottom: 9px; line-height: 1.5; }
+
+/* ── Personnel roster (Tentang Kami) ── */
+.roster-row {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 9px 2px; border-bottom: 1px solid var(--rule);
+}
+.roster-id { font-family: 'IBM Plex Mono', monospace; color: var(--stamp-red); font-size: 13px; width: 34px; }
+.roster-name { font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; }
+.file-footer {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: #6b6046;
+    text-align: right; margin-top: 18px; letter-spacing: 0.05em;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ── 3. INITIALIZE SESSION STATE FOR HISTORY ────────────────────
+# ── 3. INITIALIZE SESSION STATE ─────────────────────────────────
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# ── 4. LOAD ML ARTIFACTS ───────────────────────────────────────
+
+# ── 4. LOAD ML ARTIFACTS ────────────────────────────────────────
 @st.cache_resource
 def load_artifacts():
     model = joblib.load("fraud_model.pkl")
@@ -71,6 +291,7 @@ def load_artifacts():
     encoders = joblib.load("encoders.pkl")
     feature_names = joblib.load("feature_names.pkl")
     return model, scaler, encoders, feature_names
+
 
 model_loaded_ok = True
 try:
@@ -81,8 +302,6 @@ except Exception as e:
 
 
 def get_global_feature_importance(top_n=5):
-    """[Rekomendasi #3] Ambil feature_importances_ asli dari Random Forest
-    (bukan skor per-prediksi/SHAP) untuk transparansi model secara umum."""
     if not model_loaded_ok or not hasattr(model, "feature_importances_"):
         return None
     importances = pd.Series(model.feature_importances_, index=feature_names)
@@ -90,113 +309,137 @@ def get_global_feature_importance(top_n=5):
 
 
 def render_risk_gauge(probability: float):
-    """[Rekomendasi #3] Gauge warna dinamis (hijau/kuning/merah) menggantikan
-    st.progress bawaan yang warnanya statis."""
+    """Gauge dinamis, direkolorasi mengikuti palet tinta-kertas (bukan
+    warna default web hijau/kuning/merah terang)."""
     if probability < 0.15:
-        bar_color = "#16a34a"
+        bar_color = "#33512E"
     elif probability < 0.5:
-        bar_color = "#f59e0b"
+        bar_color = "#A6740A"
     else:
-        bar_color = "#dc2626"
+        bar_color = "#9C2B1B"
 
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=probability * 100,
-        number={"suffix": "%", "font": {"size": 34}},
+        number={"suffix": "%", "font": {"size": 32, "family": "IBM Plex Mono", "color": "#2B2620"}},
         gauge={
-            "axis": {"range": [0, 100], "tickwidth": 1},
-            "bar": {"color": bar_color, "thickness": 0.3},
-            "bgcolor": "white",
+            "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "#B9AD8F"},
+            "bar": {"color": bar_color, "thickness": 0.32},
+            "bgcolor": "#F4EFE1",
+            "bordercolor": "#B9AD8F",
             "steps": [
-                {"range": [0, 15], "color": "#dcfce7"},
-                {"range": [15, 50], "color": "#fef9c3"},
-                {"range": [50, 100], "color": "#fee2e2"},
+                {"range": [0, 15], "color": "#E3E6D9"},
+                {"range": [15, 50], "color": "#EDE2C4"},
+                {"range": [50, 100], "color": "#E9D4CD"},
             ],
             "threshold": {
-                "line": {"color": "#1e293b", "width": 3},
+                "line": {"color": "#24344D", "width": 3},
                 "thickness": 0.85,
                 "value": 15,
             },
         },
-        title={"text": "Tingkat Risiko", "font": {"size": 15}},
+        title={"text": "TINGKAT RISIKO", "font": {"size": 13, "family": "IBM Plex Mono", "color": "#6b6046"}},
     ))
-    fig.update_layout(height=230, margin=dict(l=20, r=20, t=45, b=10))
+    fig.update_layout(
+        height=230, margin=dict(l=20, r=20, t=45, b=10),
+        paper_bgcolor="rgba(0,0,0,0)",
+        font={"family": "IBM Plex Sans"},
+    )
     return fig
 
 
 def get_heuristic_flags(amt, distance_km, hour, category):
-    """[Rekomendasi #3] Flag heuristik sederhana pada INPUT pengguna
-    (bukan kontribusi model) supaya user paham indikator umum risiko fraud.
-    Dilabeli eksplisit sebagai heuristik agar tidak overclaim sebagai
-    penjelasan keputusan model."""
     flags = []
     if amt > 500:
-        flags.append("💰 Nominal transaksi tergolong tinggi (> $500)")
+        flags.append("Nominal transaksi tergolong tinggi (di atas $500)")
     if distance_km > 50:
-        flags.append("📍 Jarak ke merchant cukup jauh dari lokasi biasa (> 50 km)")
+        flags.append("Jarak ke merchant cukup jauh dari lokasi biasa (di atas 50 km)")
     if hour in [0, 1, 2, 3, 4, 5]:
-        flags.append("🕑 Transaksi terjadi pada jam rawan (dini hari)")
+        flags.append("Transaksi terjadi pada jam rawan (dini hari)")
     if category in ["shopping_net", "misc_net"]:
-        flags.append("🌐 Kategori transaksi online cenderung berisiko lebih tinggi")
+        flags.append("Kategori transaksi daring cenderung berisiko lebih tinggi")
     return flags
+
+
+def render_case_header(case_no: str, status: str, title: str, subtitle: str):
+    st.markdown(f"""
+    <div class="case-header">
+        <div class="case-header-top">
+            <span>Berkas No. {case_no}</span>
+            <span>Status: {status}</span>
+        </div>
+        <h1 class="case-title">{title}</h1>
+        <p class="case-subtitle">{subtitle}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # ── 5. SIDEBAR NAVIGATION ───────────────────────────────────────
 with st.sidebar:
-    col_logo, col_text = st.columns([1, 4])
+    col_logo, col_text = st.columns([1, 3])
     with col_logo:
-        render_svg("logo.svg", height="40px")
+        render_svg("logo.svg")
     with col_text:
-        st.markdown("<h3 style='margin-top: 2px; color: #1e293b;'>Fraud Detect AI</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='margin-bottom:0;'>Fraud Detect AI</h3>", unsafe_allow_html=True)
+        st.markdown("<div class='brand-eyebrow'>Unit Investigasi Transaksi</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
     page = option_menu(
         menu_title=None,
         options=["Dashboard", "Cara Kerja Sistem", "Tentang Kami"],
-        icons=["shield-check", "diagram-3", "people-fill"],
+        icons=["folder2-open", "diagram-3", "people"],
         default_index=0,
         styles={
             "container": {"padding": "0!important", "background-color": "transparent"},
-            "icon": {"font-size": "18px"},
+            "icon": {"color": "#D8CBA0", "font-size": "15px"},
             "nav-link": {
-                "font-size": "15px",
+                "font-family": "'IBM Plex Sans', sans-serif",
+                "font-size": "13px",
+                "font-weight": "600",
+                "letter-spacing": "0.05em",
+                "text-transform": "uppercase",
                 "text-align": "left",
-                "margin": "5px 0px",
-                "border-radius": "8px",
-                "font-family": "sans-serif"
+                "color": "#D8CBA0",
+                "margin": "2px 0px",
+                "padding": "12px 16px",
+                "border-radius": "0px",
+                "border-left": "4px solid transparent",
+                "background-color": "transparent",
             },
-            "nav-link-selected": {"background-color": "#2563eb", "color": "white", "font-weight": "bold"},
+            "nav-link-selected": {
+                "background-color": "#F4EFE1",
+                "color": "#24344D",
+                "border-left": "4px solid #9C2B1B",
+                "font-weight": "700",
+            },
         }
     )
 
     st.markdown("---")
 
-    # [Rekomendasi #7] Badge status model di sidebar
-    st.markdown("**Status Sistem**")
-    status_icon = "✅" if model_loaded_ok else "❌"
-    st.markdown(
-        f"""
-        <span class="model-badge">{status_icon} Model {'Aktif' if model_loaded_ok else 'Gagal Dimuat'}</span>
-        <span class="model-badge">🌲 Random Forest</span>
-        <span class="model-badge">🎯 Threshold 15%</span>
-        """,
-        unsafe_allow_html=True
-    )
-    st.info("Sistem Pendeteksi Penipuan Transaksi berbasis Random Forest Classifier.")
+    st.markdown(f"""
+    <div class="stamp-block">
+        <div class="stamp-row"><span class="stamp-label">MODEL</span><span class="stamp-value">RANDOM FOREST</span></div>
+        <div class="stamp-row"><span class="stamp-label">STATUS</span><span class="stamp-value">{'AKTIF' if model_loaded_ok else 'GAGAL'}</span></div>
+        <div class="stamp-row"><span class="stamp-label">AMBANG</span><span class="stamp-value">15%</span></div>
+    </div>
+    <p class="sidebar-note">Sistem pendeteksi indikasi penipuan transaksi kartu, berbasis Random Forest Classifier. Dipakai untuk penyaringan awal, bukan keputusan akhir.</p>
+    """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════
 # PAGE 1: DASHBOARD
 # ═══════════════════════════════════════════════════════════════
 if page == "Dashboard":
-    render_svg("hero_dashboard.svg")
-    st.markdown("Masukkan detail transaksi di bawah ini untuk mendapatkan analisis risiko secara **real-time**.")
+    render_case_header(
+        "FD/2026/DASH-01", "Aktif",
+        "Pemeriksaan Transaksi",
+        "Masukkan detail transaksi untuk mendapatkan analisis risiko secara real-time."
+    )
 
-    # ── Constants ──
     CATEGORIES = ['shopping_net', 'shopping_pos', 'grocery_pos', 'grocery_net', 'gas_transport', 'travel', 'misc_net', 'misc_pos', 'food_dining', 'health_fitness', 'home', 'kids_pets', 'personal_care', 'entertainment']
     STATES = ['NY','CA','TX','FL','IL','PA','OH','GA','AL','AK','AZ','AR','CO','CT','DE','HI','ID','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NC','ND','OK','OR','RI','SC','SD','TN','UT','VT','VA','WA','WV','WI','WY']
 
-    # [Rekomendasi #4] Mapping populasi kota jadi kategori yang lebih intuitif
     CITY_POP_OPTIONS = {
         "Desa kecil (< 5 ribu)": 2500,
         "Kota kecil (5 ribu - 50 ribu)": 25000,
@@ -206,31 +449,29 @@ if page == "Dashboard":
     }
 
     with st.form("prediction_form"):
-        st.subheader("Form Detail Transaksi")
+        st.markdown("### Formulir Rincian Transaksi")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            st.markdown("**💰 Finansial & Merchant**")
+            st.markdown('<span class="section-tag">A — Finansial &amp; Merchant</span>', unsafe_allow_html=True)
             amt = st.number_input(
                 "Nominal Transaksi ($)", min_value=0.0, value=50.0, step=10.0,
                 help="Nominal transaksi yang besar dan tidak biasa sering menjadi indikator awal fraud."
             )
             category = st.selectbox(
                 "Kategori Transaksi", CATEGORIES,
-                help="Kategori transaksi online (net) umumnya memiliki risiko fraud lebih tinggi dibanding offline (pos)."
+                help="Kategori transaksi daring (net) umumnya berisiko lebih tinggi dibanding luring (pos)."
             )
             distance_km = st.number_input(
                 "Jarak ke Merchant (km)", min_value=0.0, value=5.0, step=1.0,
                 help="Jarak fisik antara lokasi kartu terdaftar dan lokasi merchant saat transaksi terjadi."
             )
 
-            st.divider()
-
-            st.markdown("**📅 Waktu Transaksi**")
+            st.markdown('<span class="section-tag">B — Waktu Transaksi</span>', unsafe_allow_html=True)
             month = st.selectbox(
                 "Bulan", ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], index=11,
-                help="Beberapa periode (mis. musim liburan) memiliki pola transaksi berbeda."
+                help="Beberapa periode (misalnya musim liburan) memiliki pola transaksi berbeda."
             )
             day_of_week = st.selectbox(
                 "Hari", ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"], index=6,
@@ -238,17 +479,15 @@ if page == "Dashboard":
             )
             hour = st.slider(
                 "Jam (0-23)", 0, 23, 12,
-                help="Transaksi pada dini hari (00:00-05:00) secara statistik lebih berisiko."
+                help="Transaksi pada dini hari (00.00-05.00) secara statistik lebih berisiko."
             )
 
         with col2:
-            st.markdown("**👤 Profil Pemegang Kartu**")
+            st.markdown('<span class="section-tag">C — Profil Pemegang Kartu</span>', unsafe_allow_html=True)
             age = st.number_input("Usia", min_value=18, max_value=100, value=35)
             gender = st.selectbox("Jenis Kelamin", ["M", "F"])
 
-            st.divider()
-
-            st.markdown("**📍 Informasi Lokasi**")
+            st.markdown('<span class="section-tag">D — Informasi Lokasi</span>', unsafe_allow_html=True)
             state = st.selectbox("Negara Bagian", STATES)
             city_pop_label = st.selectbox(
                 "Populasi Kota", list(CITY_POP_OPTIONS.keys()), index=2,
@@ -257,11 +496,11 @@ if page == "Dashboard":
             city_pop = CITY_POP_OPTIONS[city_pop_label]
 
         st.markdown("<br>", unsafe_allow_html=True)
-        submit_btn = st.form_submit_button("🔍 Analisis Transaksi", use_container_width=True, type="primary")
+        submit_btn = st.form_submit_button("Proses Pemeriksaan Transaksi", width="stretch", type="primary")
 
     # ── Prediction Logic ──
     if submit_btn:
-        with st.spinner('Menganalisis pola transaksi dengan AI...'):
+        with st.spinner('Memeriksa pola transaksi...'):
             start_time = time.time()
 
             try:
@@ -306,40 +545,41 @@ if page == "Dashboard":
 
                 # ── UI Results ──
                 st.divider()
-                st.subheader("Hasil Analisis")
+                st.markdown("### Hasil Pemeriksaan")
 
-                # [Rekomendasi #3] Card-style result
-                card_class = "fraud" if is_fraud else "legit"
-                with st.container(border=True):
-                    if is_fraud:
-                        st.error("🚨 **TRANSAKSI TERINDIKASI FRAUD** — Aktivitas berisiko tinggi ditemukan!")
-                    else:
-                        st.success("✅ **TRANSAKSI SAH** — Transaksi aman untuk diproses.")
+                with st.container(border=True, key="verdict_card"):
+                    stamp_text = "Terindikasi Fraud" if is_fraud else "Dinyatakan Sah"
+                    stamp_color = "#9C2B1B" if is_fraud else "#33512E"
+                    st.markdown(f"""
+                        <div class="verdict-stamp" style="--stamp-color:{stamp_color};">{stamp_text}</div>
+                        <div class="verdict-detail">Probabilitas terukur: {probability:.1%} &nbsp;•&nbsp; Ambang batas keputusan: 15%</div>
+                    """, unsafe_allow_html=True)
 
                     res_col1, res_col2 = st.columns([1, 1])
                     with res_col1:
                         met1, met2 = st.columns(2)
                         met1.metric("Keputusan Sistem", "Blokir / Waspada" if is_fraud else "Setujui")
                         met2.metric("Waktu Inferensi", f"{latency:.1f} ms")
-                        st.caption(f"Ambang batas keputusan: 15% • Probabilitas terukur: {probability:.1%}")
 
                         flags = get_heuristic_flags(amt, distance_km, hour, category)
                         if flags:
-                            with st.expander("⚠️ Indikator umum yang terdeteksi pada input Anda (heuristik)"):
-                                for f in flags:
-                                    st.write(f"- {f}")
+                            with st.expander("Indikator umum pada input Anda (heuristik)"):
+                                st.markdown(
+                                    "<ul class='evidence-list'>" + "".join(f"<li>{f}</li>" for f in flags) + "</ul>",
+                                    unsafe_allow_html=True
+                                )
 
                     with res_col2:
-                        st.plotly_chart(render_risk_gauge(probability), use_container_width=True)
+                        st.plotly_chart(render_risk_gauge(probability), width="stretch")
 
                     global_importance = get_global_feature_importance()
                     if global_importance is not None:
-                        with st.expander("🔍 Fitur yang paling berpengaruh secara umum pada model ini"):
+                        with st.expander("Fitur yang paling berpengaruh secara umum pada model ini"):
                             st.caption("Ini adalah *feature importance* global dari Random Forest, bukan penjelasan spesifik untuk transaksi ini.")
-                            st.bar_chart(global_importance)
+                            st.bar_chart(global_importance, color="#24344D")
 
                 record = {
-                    "Hasil": "🚨 Fraud" if is_fraud else "✅ Sah",
+                    "Hasil": "Fraud" if is_fraud else "Sah",
                     "Risiko": f"{probability:.1%}",
                     "Nominal": f"${amt:.2f}",
                     "Kategori": category,
@@ -352,37 +592,48 @@ if page == "Dashboard":
             except Exception as e:
                 st.error(f"Terjadi kesalahan saat memproses data: {str(e)}")
 
-    # ── Riwayat Sesi ──
+    # ── Riwayat Sesi (ledger) ──
     st.divider()
-    st.subheader("🕰️ Riwayat Sesi")
+    st.markdown("### Log Berkas — Sesi Ini")
 
     if len(st.session_state.history) == 0:
-        st.info("Belum ada transaksi yang diuji pada sesi ini.")
+        st.markdown("<p class='sidebar-note' style='color:#6b6046 !important; border-color: var(--rule);'>Belum ada transaksi yang diperiksa pada sesi ini.</p>", unsafe_allow_html=True)
     else:
         df_history = pd.DataFrame(st.session_state.history)
         df_history.index = range(1, len(df_history) + 1)
 
-        # [Rekomendasi #5] Ringkasan analitik di atas tabel riwayat
         total_tx = len(df_history)
-        fraud_count = df_history["Hasil"].str.contains("Fraud").sum()
+        fraud_count = int(df_history["Hasil"].str.contains("Fraud").sum())
         avg_risk = df_history["Risiko"].str.rstrip("%").astype(float).mean()
 
         sum1, sum2, sum3 = st.columns(3)
-        sum1.metric("Total Transaksi Diuji", total_tx)
-        sum2.metric("Terdeteksi Fraud", fraud_count)
+        sum1.metric("Total Transaksi Diperiksa", total_tx)
+        sum2.metric("Terindikasi Fraud", fraud_count)
         sum3.metric("Rata-rata Risiko", f"{avg_risk:.1f}%")
 
-        # [Rekomendasi #5] Color-coding baris fraud/sah
         def highlight_result(row):
-            color = "#fee2e2" if "Fraud" in row["Hasil"] else "#dcfce7"
-            return [f"background-color: {color}"] * len(row)
+            bg = "#EAD6D0" if "Fraud" in row["Hasil"] else "#DFE6D6"
+            return [f"background-color: {bg}; color: #2B2620;"] * len(row)
 
-        st.dataframe(
-            df_history.style.apply(highlight_result, axis=1),
-            use_container_width=True
+        styled = (
+            df_history.style
+            .apply(highlight_result, axis=1)
+            .set_properties(**{"font-family": "'IBM Plex Mono', monospace", "font-size": "13px"})
+            .set_table_styles([{
+                "selector": "th",
+                "props": [
+                    ("font-family", "'IBM Plex Mono', monospace"),
+                    ("background-color", "#24344D"),
+                    ("color", "#F4EFE1"),
+                    ("text-transform", "uppercase"),
+                    ("font-size", "11px"),
+                    ("letter-spacing", "0.05em"),
+                ]
+            }])
         )
+        st.dataframe(styled, width="stretch")
 
-        if st.button("Hapus Riwayat", type="secondary"):
+        if st.button("Hapus Log Sesi", type="secondary"):
             st.session_state.history = []
             st.rerun()
 
@@ -390,56 +641,69 @@ if page == "Dashboard":
 # PAGE 2: CARA KERJA SISTEM
 # ═══════════════════════════════════════════════════════════════
 elif page == "Cara Kerja Sistem":
-    render_svg("hero_howitworks.svg")
+    render_case_header(
+        "FD/2026/DOC-01", "Referensi",
+        "Metodologi Sistem",
+        "Ringkasan teknis mengenai cara sistem ini mengambil keputusan."
+    )
 
     st.markdown("""
-    ### 1. Latar Belakang Bisnis
-    Di era ekonomi digital, kejahatan siber khususnya penipuan kartu kredit (*Credit Card Fraud*) menyebabkan kerugian miliaran dolar setiap tahunnya. Sistem berbasis *Machine Learning* sangat krusial di industri perbankan karena mampu meninjau ribuan transaksi per detik dan mengambil keputusan jauh lebih cepat daripada investigator manusia.
+    ### 1. Latar Belakang
+    Di era ekonomi digital, penipuan kartu kredit (*credit card fraud*) menyebabkan kerugian miliaran dolar setiap tahun. Sistem berbasis *machine learning* krusial di industri perbankan karena mampu meninjau ribuan transaksi per detik — jauh lebih cepat daripada investigator manusia.
 
-    ### 2. Kompleksitas Data (Imbalanced Data)
-    Tantangan terbesar dalam proyek ini adalah sifat data yang sangat tidak seimbang (*Imbalanced*). Dalam dunia nyata, kasus penipuan berjumlah kurang dari **1%** dari total transaksi harian. Model AI konvensional akan kesulitan mendeteksi anomali sekecil ini.
+    ### 2. Tantangan: Data Tidak Seimbang
+    Tantangan terbesar proyek ini adalah sifat data yang sangat tidak seimbang (*imbalanced*). Dalam dunia nyata, kasus penipuan berjumlah kurang dari **1%** dari total transaksi harian. Model konvensional akan kesulitan mendeteksi anomali sekecil ini.
 
-    Oleh karena itu, sistem ini dirancang menggunakan algoritma **Random Forest Classifier** dengan pendekatan rekayasa fitur (*Feature Engineering*) mendalam dan penyesuaian ambang batas keputusan (*Threshold Tuning*) menjadi 15% untuk meningkatkan sensitivitas deteksi sistem.
+    Sistem ini menggunakan algoritma **Random Forest Classifier** dengan rekayasa fitur (*feature engineering*) mendalam, dan ambang batas keputusan (*threshold*) diturunkan menjadi 15% untuk meningkatkan sensitivitas deteksi.
 
-    ### 3. Rekayasa Fitur (Feature Engineering)
-    Sistem kami tidak hanya menganalisis nominal uang, melainkan menciptakan variabel prediktif baru seperti:
-    * **Geographical Distance:** Menghitung jarak fisik (*km*) antara lokasi nasabah dan *merchant*.
-    * **Temporal Features:** Mengekstraksi jam, hari, dan bulan transaksi untuk mempelajari pola waktu operasional para penipu.
-    * **Demographic Profiling:** Mengkalkulasi umur (*age*) pengguna berdasarkan tanggal lahir.
+    ### 3. Rekayasa Fitur
+    Sistem tidak hanya menganalisis nominal uang, tetapi juga menciptakan variabel prediktif baru:
+    - **Jarak Geografis** — jarak fisik (km) antara lokasi nasabah dan merchant.
+    - **Fitur Temporal** — jam, hari, dan bulan transaksi, untuk mempelajari pola waktu operasional penipu.
+    - **Profil Demografis** — usia pengguna dihitung dari tanggal lahir.
     """)
 
-    st.info("""
-    **⚙️ ALUR PEMROSESAN SISTEM (PIPELINE):**
-    1. **Data Input** 👉 Web menangkap parameter transaksi pengguna.
-    2. **Preprocessing** 👉 Konversi data teks (Kategori/Negara) menjadi angka matematis (Label Encoding).
-    3. **Standardization** 👉 Penyetaraan skala angka menggunakan *StandardScaler*.
-    4. **Inference** 👉 Model *Random Forest* mengambil *voting* dari seluruh pohon keputusan.
-    5. **Decision Output** 👉 Jika persentase risiko > 15%, sistem memicu peringatan waspada.
-    """)
+    st.markdown("""
+    <div class="sop-box">
+        <div class="sop-header">Prosedur Standar — Alur Pemrosesan</div>
+        <ol class="sop-list">
+            <li><strong>Input Data</strong> — sistem menangkap parameter transaksi dari formulir.</li>
+            <li><strong>Preprocessing</strong> — data teks (kategori, negara bagian) dikonversi menjadi angka (label encoding).</li>
+            <li><strong>Standardisasi</strong> — skala angka disetarakan menggunakan StandardScaler.</li>
+            <li><strong>Inferensi</strong> — model Random Forest mengambil voting dari seluruh pohon keputusan.</li>
+            <li><strong>Keputusan</strong> — jika probabilitas risiko di atas 15%, sistem memicu status waspada.</li>
+        </ol>
+    </div>
+    """, unsafe_allow_html=True)
 
     global_importance = get_global_feature_importance(top_n=8)
     if global_importance is not None:
         st.markdown("### 4. Fitur Paling Berpengaruh (Global)")
-        st.caption("Diambil dari `feature_importances_` model Random Forest — menunjukkan fitur mana yang paling sering digunakan model untuk membedakan transaksi, secara keseluruhan (bukan per transaksi).")
-        st.bar_chart(global_importance)
+        st.caption("Diambil dari `feature_importances_` model Random Forest — menunjukkan fitur mana yang paling sering dipakai model untuk membedakan transaksi secara keseluruhan (bukan per transaksi).")
+        st.bar_chart(global_importance, color="#24344D")
 
 # ═══════════════════════════════════════════════════════════════
 # PAGE 3: TENTANG KAMI
 # ═══════════════════════════════════════════════════════════════
 elif page == "Tentang Kami":
-    render_svg("hero_about.svg")
+    render_case_header(
+        "FD/2026/TIM-01", "Arsip",
+        "Tim Pengembang",
+        "Purwarupa proyek akhir untuk mendemonstrasikan penerapan machine learning di industri finansial."
+    )
 
-    st.markdown("""
+    st.markdown("Aplikasi ini dikembangkan sebagai bagian dari tugas proyek akhir / *proof of concept*.")
 
-    Aplikasi web ini dikembangkan sebagai bagian dari tugas proyek akhir / purwarupa (*Proof of Concept*) untuk mendemonstrasikan implementasi algoritma kecerdasan buatan dalam memecahkan masalah industri finansial.
-
-    ---
-    **Tim Kami:**
-    * Anggota 1 - Felix Zonattan
-    * Anggota 2 - Jason Benoit Adianto
-    * Anggota 3 - Keivan Aliegery Indriartho
-    * Anggota 4 - Ivander Sanusi
-    * Anggota 5 - Haposan Emmanuel Tobias
-
-    *(Hak Cipta © 2026)*
-    """)
+    team = [
+        "Felix Zonattan",
+        "Jason Benoit Adianto",
+        "Keivan Aliegery Indriartho",
+        "Ivander Sanusi",
+        "Haposan Emmanuel Tobias",
+    ]
+    rows = "".join(
+        f'<div class="roster-row"><span class="roster-id">{i+1:02d}</span><span class="roster-name">{name}</span></div>'
+        for i, name in enumerate(team)
+    )
+    st.markdown(f"<div style='margin-top:14px;'>{rows}</div>", unsafe_allow_html=True)
+    st.markdown('<div class="file-footer">Hak Cipta &copy; 2026 — Berkas Diarsipkan</div>', unsafe_allow_html=True)
