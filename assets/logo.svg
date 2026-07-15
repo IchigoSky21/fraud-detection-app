@@ -1,12 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="40" height="40">
-  <defs>
-    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2563eb"/>
-      <stop offset="100%" stop-color="#1e293b"/>
-    </linearGradient>
-  </defs>
-  <path d="M24 2 L44 10 V22 C44 34 36 42 24 46 C12 42 4 34 4 22 V10 Z"
-        fill="url(#logoGrad)"/>
-  <path d="M16 24 L21 29 L32 17" stroke="white" stroke-width="3.2"
-        fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="46" height="46">
+  <circle cx="32" cy="32" r="29" fill="none" stroke="#D8CBA0" stroke-width="1.4"/>
+  <circle cx="32" cy="32" r="24" fill="none" stroke="#D8CBA0" stroke-width="1.4"/>
+  <g stroke="#D8CBA0" stroke-width="1.4">
+    <line x1="32" y1="3"  x2="32" y2="8"/>
+    <line x1="32" y1="56" x2="32" y2="61"/>
+    <line x1="3"  y1="32" x2="8"  y2="32"/>
+    <line x1="56" y1="32" x2="61" y2="32"/>
+    <line x1="11.7" y1="11.7" x2="15.1" y2="15.1"/>
+    <line x1="48.9" y1="48.9" x2="52.3" y2="52.3"/>
+    <line x1="11.7" y1="52.3" x2="15.1" y2="48.9"/>
+    <line x1="48.9" y1="15.1" x2="52.3" y2="11.7"/>
+  </g>
+  <circle cx="32" cy="32" r="20" fill="#F4EFE1"/>
+  <text x="32" y="30" text-anchor="middle" font-family="'Zilla Slab', Georgia, serif"
+        font-size="19" font-weight="700" fill="#24344D">FD</text>
+  <text x="32" y="42" text-anchor="middle" font-family="'IBM Plex Mono', monospace"
+        font-size="6" letter-spacing="1.5" fill="#9C2B1B">UNIT-04</text>
 </svg>
