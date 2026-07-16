@@ -28,253 +28,206 @@ def render_svg(filename: str):
 
 
 # ── 2. DESIGN SYSTEM: "BERKAS KASUS" (CASE FILE) ───────────────
-# Konsep: aplikasi ini pada dasarnya adalah meja investigasi fraud —
-# dunianya adalah map arsip, cap tinta, kop surat resmi, dan buku besar,
-# bukan dashboard SaaS generik. Palet warna kertas tua + tinta,
-# bukan hitam-neon atau krem-terracotta yang jadi default AI generatif.
-st.markdown("""
+# Konsep: meja investigasi fraud — map arsip, cap tinta, buku besar —
+# bukan dashboard SaaS generik. Dua suasana disediakan: "Kertas"
+# (meja kerja siang di dekat jendela) dan "Malam" (meja kerja di bawah
+# lampu baca). Bukan sekadar invert warna, tapi identitas yang sama
+# dibaca dalam dua kondisi cahaya berbeda.
+PALETTES = {
+    "light": {
+        "paper": "#E8E1CE", "paper_light": "#F4EFE1",
+        "ink": "#2B2620", "ink_muted": "#6b6046",
+        "accent": "#24344D", "accent_dark": "#17233A",
+        "sidebar_bg": "#24344D", "sidebar_border": "#17233A",
+        "tape": "#D8CBA0",
+        "stamp_red": "#9C2B1B", "stamp_green": "#33512E", "stamp_amber": "#A6740A",
+        "rule": "#B9AD8F",
+        "row_fraud": "#EAD6D0", "row_legit": "#DFE6D6",
+        "gauge_steps": ["#E3E6D9", "#EDE2C4", "#E9D4CD"],
+        "table_header_bg": "#24344D", "table_header_text": "#F4EFE1",
+        "stamp_blend": "multiply", "stamp_opacity": "0.9",
+    },
+    "dark": {
+        "paper": "#1C1712", "paper_light": "#262019",
+        "ink": "#E7DFC9", "ink_muted": "#A89A78",
+        "accent": "#C9A24A", "accent_dark": "#8A6C2A",
+        "sidebar_bg": "#14100C", "sidebar_border": "#000000",
+        "tape": "#9C8D6C",
+        "stamp_red": "#E0674B", "stamp_green": "#8FBB7A", "stamp_amber": "#E3BA55",
+        "rule": "#45392A",
+        "row_fraud": "#3A2620", "row_legit": "#263019",
+        "gauge_steps": ["#2A2E22", "#33301C", "#332420"],
+        "table_header_bg": "#C9A24A", "table_header_text": "#1C1712",
+        "stamp_blend": "normal", "stamp_opacity": "0.95",
+    },
+}
+
+# Baca preferensi mode SEBELUM CSS dirakit (pola standar Streamlit:
+# session_state sudah terisi dari run sebelumnya walau widget-nya
+# baru didefinisikan nanti di sidebar).
+dark_mode = st.session_state.get("dark_mode_toggle", False)
+pal = PALETTES["dark"] if dark_mode else PALETTES["light"]
+
+st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,600;0,700;1,400&family=Special+Elite&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-:root {
-    --paper: #E8E1CE;
-    --paper-light: #F4EFE1;
-    --ink: #2B2620;
-    --ink-navy: #24344D;
-    --ink-navy-dark: #17233A;
-    --stamp-red: #9C2B1B;
-    --stamp-green: #33512E;
-    --stamp-amber: #A6740A;
-    --rule: #B9AD8F;
-    --tape: #D8CBA0;
-}
+:root {{
+    --paper: {pal['paper']};
+    --paper-light: {pal['paper_light']};
+    --ink: {pal['ink']};
+    --ink-muted: {pal['ink_muted']};
+    --accent: {pal['accent']};
+    --accent-dark: {pal['accent_dark']};
+    --tape: {pal['tape']};
+    --stamp-red: {pal['stamp_red']};
+    --stamp-green: {pal['stamp_green']};
+    --stamp-amber: {pal['stamp_amber']};
+    --rule: {pal['rule']};
+}}
 
 /* ── Base ── */
-[data-testid="stAppViewContainer"], .stApp {
-    background-color: var(--paper);
-}
-[data-testid="stHeader"] {
-    background-color: var(--paper);
-}
-html, body, [class*="css"] {
-    font-family: 'IBM Plex Sans', sans-serif;
-    color: var(--ink);
-}
-h1, h2, h3 {
-    font-family: 'Zilla Slab', Georgia, serif !important;
-    color: var(--ink-navy) !important;
-}
-hr { border-color: var(--rule) !important; }
-[data-testid="stCaptionContainer"], .stCaption { color: #6b6046 !important; }
+[data-testid="stAppViewContainer"], .stApp {{ background-color: var(--paper); }}
+[data-testid="stHeader"] {{ background-color: var(--paper); }}
+html, body, [class*="css"] {{ font-family: 'IBM Plex Sans', sans-serif; color: var(--ink); }}
+h1, h2, h3 {{ font-family: 'Zilla Slab', Georgia, serif !important; color: var(--accent) !important; }}
+hr {{ border-color: var(--rule) !important; }}
+[data-testid="stCaptionContainer"], .stCaption {{ color: var(--ink-muted) !important; }}
 
 /* ── Sidebar = folder spine ── */
-[data-testid="stSidebar"] {
-    background-color: var(--ink-navy);
-    border-right: 1px solid var(--ink-navy-dark);
-}
-[data-testid="stSidebar"] * { color: var(--paper-light) !important; }
-[data-testid="stSidebar"] h3 { color: var(--paper-light) !important; }
-[data-testid="stSidebar"] hr { border-color: rgba(244,239,225,0.22) !important; }
-.svg-wrap svg { display: block; }
-
-.brand-eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.12em;
-    color: var(--tape) !important;
-    text-transform: uppercase;
-    margin-top: -4px;
-}
+[data-testid="stSidebar"] {{ background-color: {pal['sidebar_bg']}; border-right: 1px solid {pal['sidebar_border']}; }}
+[data-testid="stSidebar"] * {{ color: var(--paper-light) !important; }}
+[data-testid="stSidebar"] h3 {{ color: var(--paper-light) !important; }}
+[data-testid="stSidebar"] hr {{ border-color: rgba(244,239,225,0.2) !important; }}
+.svg-wrap svg {{ display: block; }}
 
 /* ── Stamped status block (sidebar) ── */
-.stamp-block {
+.stamp-block {{
     border: 1.5px solid var(--tape);
     background-color: rgba(244,239,225,0.06);
     padding: 12px 14px;
     margin: 10px 0 14px 0;
     transform: rotate(-0.4deg);
-}
-.stamp-row {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    padding: 3px 0;
-    border-bottom: 1px dotted rgba(244,239,225,0.25);
-}
-.stamp-row:last-child { border-bottom: none; }
-.stamp-label { letter-spacing: 0.08em; color: var(--tape) !important; }
-.stamp-value { font-weight: 600; color: var(--paper-light) !important; }
-.sidebar-note {
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--tape) !important;
-    border-left: 2px solid var(--stamp-red);
-    padding-left: 10px;
-}
+}}
+.stamp-row {{
+    display: flex; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11.5px;
+    padding: 3px 0; border-bottom: 1px dotted rgba(244,239,225,0.25);
+}}
+.stamp-row:last-child {{ border-bottom: none; }}
+.stamp-label {{ letter-spacing: 0.08em; color: var(--tape) !important; }}
+.stamp-value {{ font-weight: 600; color: var(--paper-light) !important; }}
+.sidebar-note {{
+    font-size: 12px; line-height: 1.5; color: var(--tape) !important;
+    border-left: 2px solid var(--stamp-red); padding-left: 10px;
+}}
 
 /* ── Case file letterhead header ── */
-.case-header {
+.case-header {{
     background-color: var(--paper-light);
     border: 1px solid var(--rule);
-    border-left: 6px solid var(--ink-navy);
+    border-left: 6px solid var(--accent);
     padding: 20px 26px 22px 26px;
     margin-bottom: 22px;
-}
-.case-header-top {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    letter-spacing: 0.1em;
-    color: var(--ink-navy);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    opacity: 0.75;
-}
-.case-title {
+}}
+.case-title {{
     font-family: 'Zilla Slab', Georgia, serif !important;
-    font-weight: 700;
-    font-size: 2.1rem;
-    color: var(--ink-navy) !important;
-    margin: 0 0 6px 0;
-    line-height: 1.15;
-}
-.case-subtitle {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-style: italic;
-    color: #5a5138;
-    font-size: 0.98rem;
-    margin: 0;
-}
+    font-weight: 700; font-size: 2.1rem;
+    color: var(--accent) !important;
+    margin: 0 0 6px 0; line-height: 1.15;
+}}
+.case-subtitle {{
+    font-family: 'IBM Plex Sans', sans-serif; font-style: italic;
+    color: var(--ink-muted); font-size: 0.98rem; margin: 0;
+}}
 
 /* ── Form section tags (lettered — a real intake form has real sections) ── */
-.section-tag {
+.section-tag {{
     display: inline-block;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background-color: var(--ink-navy);
-    color: var(--paper-light);
-    padding: 3px 9px;
-    margin-bottom: 8px;
-}
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    background-color: var(--accent); color: var(--paper-light);
+    padding: 3px 9px; margin-bottom: 8px;
+}}
 
 /* ── Buttons ── */
-.stButton button, [data-testid="stFormSubmitButton"] button {
-    background-color: var(--ink-navy) !important;
+.stButton button, [data-testid="stFormSubmitButton"] button {{
+    background-color: var(--accent) !important;
     color: var(--paper-light) !important;
-    border: 1px solid var(--ink-navy-dark) !important;
+    border: 1px solid var(--accent-dark) !important;
     border-radius: 2px !important;
     font-family: 'IBM Plex Mono', monospace !important;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-size: 13px !important;
-}
-.stButton button:hover, [data-testid="stFormSubmitButton"] button:hover {
-    background-color: var(--stamp-red) !important;
-    border-color: var(--stamp-red) !important;
-}
+    letter-spacing: 0.06em; text-transform: uppercase; font-size: 13px !important;
+}}
+.stButton button:hover, [data-testid="stFormSubmitButton"] button:hover {{
+    background-color: var(--stamp-red) !important; border-color: var(--stamp-red) !important;
+}}
 
 /* ── Inputs ── */
 [data-testid="stNumberInput"] input, [data-testid="stTextInput"] input,
-[data-baseweb="select"] > div {
+[data-baseweb="select"] > div {{
     background-color: var(--paper-light) !important;
     border-color: var(--rule) !important;
     border-radius: 2px !important;
     color: var(--ink) !important;
     font-family: 'IBM Plex Mono', monospace !important;
-}
+}}
 
 /* ── Metrics ── */
-[data-testid="stMetricValue"] {
-    font-family: 'IBM Plex Mono', monospace !important;
-    color: var(--ink-navy) !important;
-}
-[data-testid="stMetricLabel"] {
+[data-testid="stMetricValue"] {{ font-family: 'IBM Plex Mono', monospace !important; color: var(--accent) !important; }}
+[data-testid="stMetricLabel"] {{
     font-family: 'IBM Plex Sans', sans-serif !important;
-    text-transform: uppercase;
-    font-size: 11.5px !important;
-    letter-spacing: 0.05em;
-    color: #6b6046 !important;
-}
+    text-transform: uppercase; font-size: 11.5px !important;
+    letter-spacing: 0.05em; color: var(--ink-muted) !important;
+}}
 
 /* ── Bordered containers (result card) ── */
-.st-key-verdict_card {
+.st-key-verdict_card {{
     background-color: var(--paper-light) !important;
     border: 1px solid var(--rule) !important;
     border-radius: 2px !important;
-}
+}}
 
 /* ── The signature element: an ink verdict stamp ── */
-.verdict-stamp {
+.verdict-stamp {{
     display: inline-block;
     font-family: 'Special Elite', 'IBM Plex Mono', monospace;
-    font-size: 1.55rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 1.55rem; letter-spacing: 0.06em; text-transform: uppercase;
     padding: 10px 24px;
     border: 4px double var(--stamp-color);
     color: var(--stamp-color);
     transform: rotate(-6deg);
-    opacity: 0.9;
-    mix-blend-mode: multiply;
+    opacity: {pal['stamp_opacity']};
+    mix-blend-mode: {pal['stamp_blend']};
     margin-bottom: 10px;
-}
-.verdict-detail {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.85rem;
-    color: #5a5138;
-    margin-top: 2px;
-}
+}}
+.verdict-detail {{ font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: var(--ink-muted); margin-top: 2px; }}
 
 /* ── Evidence / heuristic list ── */
-.evidence-list { list-style: none; padding-left: 0; margin: 6px 0; }
-.evidence-list li {
-    position: relative;
-    padding: 7px 0 7px 24px;
-    border-bottom: 1px dashed var(--rule);
-    font-size: 0.92rem;
-}
-.evidence-list li:before {
-    content: "§";
-    position: absolute; left: 2px;
-    color: var(--stamp-amber);
-    font-weight: 700;
-}
+.evidence-list {{ list-style: none; padding-left: 0; margin: 6px 0; }}
+.evidence-list li {{ position: relative; padding: 7px 0 7px 24px; border-bottom: 1px dashed var(--rule); font-size: 0.92rem; }}
+.evidence-list li:before {{ content: "§"; position: absolute; left: 2px; color: var(--stamp-amber); font-weight: 700; }}
 
 /* ── SOP / procedure box ── */
-.sop-box {
-    border: 1px solid var(--rule);
-    border-left: 6px solid var(--ink-navy);
-    background-color: var(--paper-light);
-    padding: 18px 24px;
-    margin: 14px 0 20px 0;
-}
-.sop-header {
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 12px;
-    color: var(--ink-navy);
-    margin-bottom: 10px;
-}
-.sop-list { margin: 0; padding-left: 20px; }
-.sop-list li { margin-bottom: 9px; line-height: 1.5; }
+.sop-box {{
+    border: 1px solid var(--rule); border-left: 6px solid var(--accent);
+    background-color: var(--paper-light); padding: 18px 24px; margin: 14px 0 20px 0;
+}}
+.sop-header {{
+    font-family: 'IBM Plex Mono', monospace; text-transform: uppercase;
+    letter-spacing: 0.08em; font-size: 12px; color: var(--accent); margin-bottom: 10px;
+}}
+.sop-list {{ margin: 0; padding-left: 20px; }}
+.sop-list li {{ margin-bottom: 9px; line-height: 1.5; }}
 
 /* ── Personnel roster (Tentang Kami) ── */
-.roster-row {
-    display: flex; align-items: baseline; gap: 14px;
-    padding: 9px 2px; border-bottom: 1px solid var(--rule);
-}
-.roster-id { font-family: 'IBM Plex Mono', monospace; color: var(--stamp-red); font-size: 13px; width: 34px; }
-.roster-name { font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; }
-.file-footer {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; color: #6b6046;
+.roster-row {{ display: flex; align-items: baseline; gap: 14px; padding: 9px 2px; border-bottom: 1px solid var(--rule); }}
+.roster-id {{ font-family: 'IBM Plex Mono', monospace; color: var(--stamp-red); font-size: 13px; width: 34px; }}
+.roster-name {{ font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; }}
+.file-footer {{
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-muted);
     text-align: right; margin-top: 18px; letter-spacing: 0.05em;
-}
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -308,42 +261,39 @@ def get_global_feature_importance(top_n=5):
     return importances.sort_values(ascending=False).head(top_n)
 
 
-def render_risk_gauge(probability: float):
-    """Gauge dinamis, direkolorasi mengikuti palet tinta-kertas (bukan
-    warna default web hijau/kuning/merah terang)."""
+def render_risk_gauge(probability: float, pal: dict):
+    """Gauge dinamis, direkolorasi mengikuti palet aktif (Kertas/Malam)
+    alih-alih warna default web hijau/kuning/merah terang."""
     if probability < 0.15:
-        bar_color = "#33512E"
+        bar_color = pal["stamp_green"]
     elif probability < 0.5:
-        bar_color = "#A6740A"
+        bar_color = pal["stamp_amber"]
     else:
-        bar_color = "#9C2B1B"
+        bar_color = pal["stamp_red"]
 
+    steps = pal["gauge_steps"]
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=probability * 100,
-        number={"suffix": "%", "font": {"size": 32, "family": "IBM Plex Mono", "color": "#2B2620"}},
+        number={"suffix": "%", "font": {"size": 32, "family": "IBM Plex Mono", "color": pal["ink"]}},
         gauge={
-            "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "#B9AD8F"},
+            "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": pal["rule"]},
             "bar": {"color": bar_color, "thickness": 0.32},
-            "bgcolor": "#F4EFE1",
-            "bordercolor": "#B9AD8F",
+            "bgcolor": pal["paper_light"],
+            "bordercolor": pal["rule"],
             "steps": [
-                {"range": [0, 15], "color": "#E3E6D9"},
-                {"range": [15, 50], "color": "#EDE2C4"},
-                {"range": [50, 100], "color": "#E9D4CD"},
+                {"range": [0, 15], "color": steps[0]},
+                {"range": [15, 50], "color": steps[1]},
+                {"range": [50, 100], "color": steps[2]},
             ],
-            "threshold": {
-                "line": {"color": "#24344D", "width": 3},
-                "thickness": 0.85,
-                "value": 15,
-            },
+            "threshold": {"line": {"color": pal["accent"], "width": 3}, "thickness": 0.85, "value": 15},
         },
-        title={"text": "TINGKAT RISIKO", "font": {"size": 13, "family": "IBM Plex Mono", "color": "#6b6046"}},
+        title={"text": "TINGKAT RISIKO", "font": {"size": 13, "family": "IBM Plex Mono", "color": pal["ink_muted"]}},
     ))
     fig.update_layout(
         height=230, margin=dict(l=20, r=20, t=45, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
-        font={"family": "IBM Plex Sans"},
+        font={"family": "IBM Plex Sans", "color": pal["ink"]},
     )
     return fig
 
@@ -361,13 +311,9 @@ def get_heuristic_flags(amt, distance_km, hour, category):
     return flags
 
 
-def render_case_header(case_no: str, status: str, title: str, subtitle: str):
+def render_case_header(title: str, subtitle: str):
     st.markdown(f"""
     <div class="case-header">
-        <div class="case-header-top">
-            <span>Berkas No. {case_no}</span>
-            <span>Status: {status}</span>
-        </div>
         <h1 class="case-title">{title}</h1>
         <p class="case-subtitle">{subtitle}</p>
     </div>
@@ -381,7 +327,6 @@ with st.sidebar:
         render_svg("logo.svg")
     with col_text:
         st.markdown("<h3 style='margin-bottom:0;'>Fraud Detect AI</h3>", unsafe_allow_html=True)
-        st.markdown("<div class='brand-eyebrow'>Unit Investigasi Transaksi</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -392,7 +337,7 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"padding": "0!important", "background-color": "transparent"},
-            "icon": {"color": "#D8CBA0", "font-size": "15px"},
+            "icon": {"color": pal["tape"], "font-size": "15px"},
             "nav-link": {
                 "font-family": "'IBM Plex Sans', sans-serif",
                 "font-size": "13px",
@@ -400,7 +345,7 @@ with st.sidebar:
                 "letter-spacing": "0.05em",
                 "text-transform": "uppercase",
                 "text-align": "left",
-                "color": "#D8CBA0",
+                "color": pal["tape"],
                 "margin": "2px 0px",
                 "padding": "12px 16px",
                 "border-radius": "0px",
@@ -408,15 +353,17 @@ with st.sidebar:
                 "background-color": "transparent",
             },
             "nav-link-selected": {
-                "background-color": "#F4EFE1",
-                "color": "#24344D",
-                "border-left": "4px solid #9C2B1B",
+                "background-color": pal["paper_light"],
+                "color": pal["accent"],
+                "border-left": f"4px solid {pal['stamp_red']}",
                 "font-weight": "700",
             },
         }
     )
 
     st.markdown("---")
+
+    st.toggle("Mode Malam", key="dark_mode_toggle")
 
     st.markdown(f"""
     <div class="stamp-block">
@@ -432,7 +379,6 @@ with st.sidebar:
 # ═══════════════════════════════════════════════════════════════
 if page == "Dashboard":
     render_case_header(
-        "FD/2026/DASH-01", "Aktif",
         "Pemeriksaan Transaksi",
         "Masukkan detail transaksi untuk mendapatkan analisis risiko secara real-time."
     )
@@ -549,7 +495,7 @@ if page == "Dashboard":
 
                 with st.container(border=True, key="verdict_card"):
                     stamp_text = "Terindikasi Fraud" if is_fraud else "Dinyatakan Sah"
-                    stamp_color = "#9C2B1B" if is_fraud else "#33512E"
+                    stamp_color = pal["stamp_red"] if is_fraud else pal["stamp_green"]
                     st.markdown(f"""
                         <div class="verdict-stamp" style="--stamp-color:{stamp_color};">{stamp_text}</div>
                         <div class="verdict-detail">Probabilitas terukur: {probability:.1%} &nbsp;•&nbsp; Ambang batas keputusan: 15%</div>
@@ -570,13 +516,13 @@ if page == "Dashboard":
                                 )
 
                     with res_col2:
-                        st.plotly_chart(render_risk_gauge(probability), width="stretch")
+                        st.plotly_chart(render_risk_gauge(probability, pal), width="stretch")
 
                     global_importance = get_global_feature_importance()
                     if global_importance is not None:
                         with st.expander("Fitur yang paling berpengaruh secara umum pada model ini"):
                             st.caption("Ini adalah *feature importance* global dari Random Forest, bukan penjelasan spesifik untuk transaksi ini.")
-                            st.bar_chart(global_importance, color="#24344D")
+                            st.bar_chart(global_importance, color=pal["accent"])
 
                 record = {
                     "Hasil": "Fraud" if is_fraud else "Sah",
@@ -597,7 +543,11 @@ if page == "Dashboard":
     st.markdown("### Log Berkas — Sesi Ini")
 
     if len(st.session_state.history) == 0:
-        st.markdown("<p class='sidebar-note' style='color:#6b6046 !important; border-color: var(--rule);'>Belum ada transaksi yang diperiksa pada sesi ini.</p>", unsafe_allow_html=True)
+        st.markdown(
+            "<p class='sidebar-note' style='color: var(--ink-muted) !important; border-color: var(--rule);'>"
+            "Belum ada transaksi yang diperiksa pada sesi ini.</p>",
+            unsafe_allow_html=True
+        )
     else:
         df_history = pd.DataFrame(st.session_state.history)
         df_history.index = range(1, len(df_history) + 1)
@@ -612,8 +562,8 @@ if page == "Dashboard":
         sum3.metric("Rata-rata Risiko", f"{avg_risk:.1f}%")
 
         def highlight_result(row):
-            bg = "#EAD6D0" if "Fraud" in row["Hasil"] else "#DFE6D6"
-            return [f"background-color: {bg}; color: #2B2620;"] * len(row)
+            bg = pal["row_fraud"] if "Fraud" in row["Hasil"] else pal["row_legit"]
+            return [f"background-color: {bg}; color: {pal['ink']};"] * len(row)
 
         styled = (
             df_history.style
@@ -623,8 +573,8 @@ if page == "Dashboard":
                 "selector": "th",
                 "props": [
                     ("font-family", "'IBM Plex Mono', monospace"),
-                    ("background-color", "#24344D"),
-                    ("color", "#F4EFE1"),
+                    ("background-color", pal["table_header_bg"]),
+                    ("color", pal["table_header_text"]),
                     ("text-transform", "uppercase"),
                     ("font-size", "11px"),
                     ("letter-spacing", "0.05em"),
@@ -642,7 +592,6 @@ if page == "Dashboard":
 # ═══════════════════════════════════════════════════════════════
 elif page == "Cara Kerja Sistem":
     render_case_header(
-        "FD/2026/DOC-01", "Referensi",
         "Metodologi Sistem",
         "Ringkasan teknis mengenai cara sistem ini mengambil keputusan."
     )
@@ -680,14 +629,13 @@ elif page == "Cara Kerja Sistem":
     if global_importance is not None:
         st.markdown("### 4. Fitur Paling Berpengaruh (Global)")
         st.caption("Diambil dari `feature_importances_` model Random Forest — menunjukkan fitur mana yang paling sering dipakai model untuk membedakan transaksi secara keseluruhan (bukan per transaksi).")
-        st.bar_chart(global_importance, color="#24344D")
+        st.bar_chart(global_importance, color=pal["accent"])
 
 # ═══════════════════════════════════════════════════════════════
 # PAGE 3: TENTANG KAMI
 # ═══════════════════════════════════════════════════════════════
 elif page == "Tentang Kami":
     render_case_header(
-        "FD/2026/TIM-01", "Arsip",
         "Tim Pengembang",
         "Purwarupa proyek akhir untuk mendemonstrasikan penerapan machine learning di industri finansial."
     )
@@ -706,4 +654,4 @@ elif page == "Tentang Kami":
         for i, name in enumerate(team)
     )
     st.markdown(f"<div style='margin-top:14px;'>{rows}</div>", unsafe_allow_html=True)
-    st.markdown('<div class="file-footer">Hak Cipta &copy; 2026 — Berkas Diarsipkan</div>', unsafe_allow_html=True)
+    st.markdown('<div class="file-footer">Hak Cipta &copy; 2026</div>', unsafe_allow_html=True)
