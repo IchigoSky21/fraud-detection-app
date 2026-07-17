@@ -37,27 +37,25 @@ PALETTES = {
     "light": {
         "paper": "#E8E1CE", "paper_light": "#F4EFE1",
         "ink": "#2B2620", "ink_muted": "#6b6046",
-        "accent": "#24344D", "accent_dark": "#17233A",
-        "sidebar_bg": "#24344D", "sidebar_border": "#17233A",
+        "accent": "#24344D", "accent_dark": "#17233A", "accent_text": "#F4EFE1",
+        "sidebar_bg": "#24344D", "sidebar_border": "#17233A", "on_dark": "#F4EFE1",
         "tape": "#D8CBA0",
         "stamp_red": "#9C2B1B", "stamp_green": "#33512E", "stamp_amber": "#A6740A",
         "rule": "#B9AD8F",
         "row_fraud": "#EAD6D0", "row_legit": "#DFE6D6",
         "gauge_steps": ["#E3E6D9", "#EDE2C4", "#E9D4CD"],
-        "table_header_bg": "#24344D", "table_header_text": "#F4EFE1",
         "stamp_blend": "multiply", "stamp_opacity": "0.9",
     },
     "dark": {
         "paper": "#1C1712", "paper_light": "#262019",
         "ink": "#E7DFC9", "ink_muted": "#A89A78",
-        "accent": "#C9A24A", "accent_dark": "#8A6C2A",
-        "sidebar_bg": "#14100C", "sidebar_border": "#000000",
+        "accent": "#C9A24A", "accent_dark": "#8A6C2A", "accent_text": "#1C1712",
+        "sidebar_bg": "#14100C", "sidebar_border": "#000000", "on_dark": "#F4EFE1",
         "tape": "#9C8D6C",
         "stamp_red": "#E0674B", "stamp_green": "#8FBB7A", "stamp_amber": "#E3BA55",
         "rule": "#45392A",
         "row_fraud": "#3A2620", "row_legit": "#263019",
         "gauge_steps": ["#2A2E22", "#33301C", "#332420"],
-        "table_header_bg": "#C9A24A", "table_header_text": "#1C1712",
         "stamp_blend": "normal", "stamp_opacity": "0.95",
     },
 }
@@ -79,6 +77,8 @@ st.markdown(f"""
     --ink-muted: {pal['ink_muted']};
     --accent: {pal['accent']};
     --accent-dark: {pal['accent_dark']};
+    --accent-text: {pal['accent_text']};
+    --on-dark: {pal['on_dark']};
     --tape: {pal['tape']};
     --stamp-red: {pal['stamp_red']};
     --stamp-green: {pal['stamp_green']};
@@ -95,11 +95,35 @@ hr {{ border-color: var(--rule) !important; }}
 [data-testid="stCaptionContainer"], .stCaption {{ color: var(--ink-muted) !important; }}
 
 /* ── Sidebar = folder spine ── */
+/* NOTE: we deliberately do NOT use a blanket `* {{ color: ... !important }}`
+   here. It previously clobbered streamlit-option-menu's own inline text/icon
+   colors on the selected tab (measured contrast 1.41:1 — effectively
+   invisible). Instead we target only the elements that actually need a
+   default color, and leave the nav's own colors alone. */
 [data-testid="stSidebar"] {{ background-color: {pal['sidebar_bg']}; border-right: 1px solid {pal['sidebar_border']}; }}
-[data-testid="stSidebar"] * {{ color: var(--paper-light) !important; }}
-[data-testid="stSidebar"] h3 {{ color: var(--paper-light) !important; }}
+[data-testid="stSidebar"] h3 {{ color: var(--on-dark) !important; }}
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p:not(.sidebar-note) {{
+    color: var(--on-dark) !important;
+}}
 [data-testid="stSidebar"] hr {{ border-color: rgba(244,239,225,0.2) !important; }}
+/* Force the ACTIVE tab's text/icon to the accent color explicitly, so it
+   always reads against its own light selected background regardless of
+   which mode is active. */
+[data-testid="stSidebar"] a.nav-link.active,
+[data-testid="stSidebar"] a.nav-link.active span,
+[data-testid="stSidebar"] li.active a {{ color: var(--accent) !important; }}
+[data-testid="stSidebar"] a.nav-link.active i,
+[data-testid="stSidebar"] a.nav-link.active svg {{ color: var(--accent) !important; fill: var(--accent) !important; }}
 .svg-wrap svg {{ display: block; }}
+
+/* ── Dropdown / select popovers (BaseWeb renders these via a portal, but
+   they still sit under the same document root, so :root variables reach
+   them even though they're outside the normal sidebar/main DOM branch). ── */
+[data-baseweb="popover"] [data-baseweb="menu"],
+ul[role="listbox"] {{ background-color: var(--paper-light) !important; }}
+[data-baseweb="menu"] li, [role="option"] {{ color: var(--ink) !important; }}
 
 /* ── Stamped status block (sidebar) ── */
 .stamp-block {{
@@ -116,7 +140,7 @@ hr {{ border-color: var(--rule) !important; }}
 }}
 .stamp-row:last-child {{ border-bottom: none; }}
 .stamp-label {{ letter-spacing: 0.08em; color: var(--tape) !important; }}
-.stamp-value {{ font-weight: 600; color: var(--paper-light) !important; }}
+.stamp-value {{ font-weight: 600; color: var(--on-dark) !important; }}
 .sidebar-note {{
     font-size: 12px; line-height: 1.5; color: var(--tape) !important;
     border-left: 2px solid var(--stamp-red); padding-left: 10px;
@@ -146,14 +170,14 @@ hr {{ border-color: var(--rule) !important; }}
     display: inline-block;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
-    background-color: var(--accent); color: var(--paper-light);
+    background-color: var(--accent); color: var(--accent-text);
     padding: 3px 9px; margin-bottom: 8px;
 }}
 
 /* ── Buttons ── */
 .stButton button, [data-testid="stFormSubmitButton"] button {{
     background-color: var(--accent) !important;
-    color: var(--paper-light) !important;
+    color: var(--accent-text) !important;
     border: 1px solid var(--accent-dark) !important;
     border-radius: 2px !important;
     font-family: 'IBM Plex Mono', monospace !important;
@@ -227,6 +251,24 @@ hr {{ border-color: var(--rule) !important; }}
 .file-footer {{
     font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-muted);
     text-align: right; margin-top: 18px; letter-spacing: 0.05em;
+}}
+
+/* ── Overflow safety for rotated elements ── */
+.verdict-wrap {{ overflow: hidden; max-width: 100%; padding: 2px 0; }}
+
+/* ── Mobile (phones / narrow viewports) ── */
+@media (max-width: 640px) {{
+    .case-header {{ padding: 14px 16px 16px 16px; }}
+    .case-title {{ font-size: 1.4rem; }}
+    .case-subtitle {{ font-size: 0.88rem; }}
+    .verdict-stamp {{
+        font-size: 1.1rem;
+        padding: 7px 14px;
+        transform: rotate(-4deg);
+    }}
+    .stamp-row {{ flex-wrap: wrap; font-size: 11px; }}
+    .roster-row {{ flex-wrap: wrap; gap: 6px 14px; }}
+    .sop-box, .case-header {{ margin-left: 0; margin-right: 0; }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -497,8 +539,10 @@ if page == "Dashboard":
                     stamp_text = "Terindikasi Fraud" if is_fraud else "Dinyatakan Sah"
                     stamp_color = pal["stamp_red"] if is_fraud else pal["stamp_green"]
                     st.markdown(f"""
-                        <div class="verdict-stamp" style="--stamp-color:{stamp_color};">{stamp_text}</div>
-                        <div class="verdict-detail">Probabilitas terukur: {probability:.1%} &nbsp;•&nbsp; Ambang batas keputusan: 15%</div>
+                        <div class="verdict-wrap">
+                            <div class="verdict-stamp" style="--stamp-color:{stamp_color};">{stamp_text}</div>
+                            <div class="verdict-detail">Probabilitas terukur: {probability:.1%} &nbsp;•&nbsp; Ambang batas keputusan: 15%</div>
+                        </div>
                     """, unsafe_allow_html=True)
 
                     res_col1, res_col2 = st.columns([1, 1])
@@ -573,8 +617,8 @@ if page == "Dashboard":
                 "selector": "th",
                 "props": [
                     ("font-family", "'IBM Plex Mono', monospace"),
-                    ("background-color", pal["table_header_bg"]),
-                    ("color", pal["table_header_text"]),
+                    ("background-color", pal["accent"]),
+                    ("color", pal["accent_text"]),
                     ("text-transform", "uppercase"),
                     ("font-size", "11px"),
                     ("letter-spacing", "0.05em"),
