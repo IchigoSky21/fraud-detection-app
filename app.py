@@ -73,16 +73,26 @@ st.markdown(f"""
 [data-testid="stAppViewContainer"],.stApp {{background:var(--paper);}}
 [data-testid="stHeader"] {{background:var(--paper);}}
 html,body,[class*="css"] {{font-family:'DM Sans',sans-serif;color:var(--ink);}}
-h1,h2,h3 {{font-family:'DM Sans',sans-serif!important;color:var(--ink)!important;letter-spacing:-.02em;}}
+.stMarkdown,.stMarkdown p,.stMarkdown li,.stCaption,.stAlert,.stText,.stTextInput label,.stNumberInput label,[data-testid="stWidgetLabel"],[data-testid="stWidgetLabel"] p {{color:var(--ink)!important;}}
+h1,h2,h3,h4,h5,h6 {{font-family:'DM Sans',sans-serif!important;color:var(--ink)!important;letter-spacing:-.02em;}}
 hr {{border-color:var(--border)!important;}}
 [data-testid="stSidebar"] {{background:var(--surface)!important;border-right:1px solid var(--border);}}
 [data-testid="stSidebar"] h3,[data-testid="stSidebar"] label,[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {{color:var(--ink)!important;}}
 [data-testid="stSidebar"] .nav-link {{color:var(--muted)!important;border-radius:10px!important;padding:10px 12px!important;margin:3px 0!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;}}
 [data-testid="stSidebar"] .nav-link:hover {{background:var(--paper)!important;color:var(--ink)!important;}}
-[data-testid="stSidebar"] .nav-link.active {{background:#EEF3F8!important;color:var(--accent)!important;border-left:3px solid #2563EB!important;}}
-[data-testid="stSidebar"] .nav-link.active i {{color:#2563EB!important;}}
-[data-baseweb="popover"] [data-baseweb="menu"],ul[role="listbox"] {{background:var(--surface)!important;}}
+[data-testid="stSidebar"] .nav-link.active {{background:{'#1D2B3F' if dark_mode else '#EEF3F8'}!important;color:var(--accent)!important;border-left:3px solid #2563EB!important;}}
+[data-testid="stSidebar"] .nav-link.active span,[data-testid="stSidebar"] .nav-link.active i {{color:var(--accent)!important;}}
+[data-baseweb="popover"] [data-baseweb="menu"],ul[role="listbox"] {{background:var(--surface)!important;border:1px solid var(--border)!important;}}
 [data-baseweb="menu"] li,[role="option"] {{color:var(--ink)!important;}}
+[data-baseweb="select"] > div {{color:var(--ink)!important;}}
+[data-baseweb="select"] input {{color:var(--ink)!important;}}
+[data-baseweb="select"] [data-baseweb="select-value"] {{color:var(--ink)!important;}}
+input,textarea {{color:var(--ink)!important;caret-color:var(--accent)!important;}}
+input::placeholder,textarea::placeholder {{color:var(--muted)!important;opacity:1!important;}}
+button {{color:var(--ink);}}
+.stCheckbox label,.stRadio label {{color:var(--ink)!important;}}
+[data-testid="stExpander"] summary,[data-testid="stExpander"] summary p {{color:var(--ink)!important;}}
+[data-testid="stDataFrame"] {{color:var(--ink)!important;}}
 .stamp-block {{border:1px solid var(--border);background:var(--paper);padding:12px 14px;margin:12px 0;border-radius:12px;transform:none;}}
 .stamp-row {{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);}}
 .stamp-row:last-child {{border-bottom:0;}}
