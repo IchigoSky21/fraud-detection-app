@@ -539,4 +539,4 @@ elif page == "Tentang Kami":
         for i, name in enumerate(team)
     )
     st.markdown(f"<div style='margin-top:14px;'>{rows}</div>", unsafe_allow_html=True)
-    st.markdown('<div class="file-footer">Hak Cipta &copy; 2026</div>', unsafe_allow_html=True)st.markdown(f"""
+    st.markdown('<div class="file-footer">Hak Cipta &copy; 2026</div>', unsafe_allow_html=True)
