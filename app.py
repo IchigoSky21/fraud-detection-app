@@ -121,6 +121,76 @@ button {{color:var(--ink);}}
 .roster-name {{font-weight:600;}}
 .file-footer {{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);text-align:right;margin-top:18px;}}
 @media (max-width:800px) {{.case-title {{font-size:1.75rem;}}.verdict-stamp {{font-size:.9rem;}}}}
+
+/*RESPONSIVE_PATCH*/
+html,body { overflow-x:hidden; }
+[data-testid="stAppViewContainer"] { min-width:0; }
+.block-container { width:100%; max-width:1400px; padding-top:2rem; padding-left:clamp(1rem,3vw,3rem); padding-right:clamp(1rem,3vw,3rem); }
+[data-testid="stSidebar"] { min-width:280px; }
+[data-testid="stSidebar"] > div:first-child { padding-left:1rem; padding-right:1rem; }
+[data-testid="stHorizontalBlock"] { min-width:0; }
+[data-testid="stColumn"] { min-width:0!important; }
+[data-testid="stPlotlyChart"], [data-testid="stDataFrame"] { max-width:100%; }
+.verdict-wrap { min-width:0; }
+.case-subtitle { overflow-wrap:anywhere; }
+.sop-box { overflow-wrap:anywhere; }
+.roster-name { overflow-wrap:anywhere; }
+
+@media (max-width: 1100px) {
+  .block-container { padding-left:1.5rem; padding-right:1.5rem; }
+  .case-title { font-size:1.95rem; }
+  [data-testid="stSidebar"] { min-width:250px; }
+  .sop-box { padding:18px 20px; }
+}
+
+@media (max-width: 768px) {
+  .block-container { padding-top:1.25rem; padding-left:1rem; padding-right:1rem; }
+  .case-header { padding-bottom:16px; }
+  .case-title { font-size:1.65rem; line-height:1.12; }
+  .case-subtitle { font-size:14px; line-height:1.5; }
+  .section-tag { margin-top:12px; }
+  .sop-box { padding:16px; border-radius:12px; }
+  .roster-row { gap:10px; padding:10px 12px; }
+  [data-testid="stMetric"] { padding:10px; }
+  [data-testid="stMetricValue"] { font-size:1.35rem!important; }
+  [data-testid="stMetricLabel"] { font-size:.78rem!important; }
+  .verdict-stamp { font-size:.85rem; padding:6px 10px; }
+  .verdict-detail { font-size:.7rem; line-height:1.5; }
+  [data-testid="stFormSubmitButton"] button { min-height:48px; }
+  [data-testid="stDataFrame"] { overflow-x:auto!important; }
+}
+
+@media (max-width: 640px) {
+  .block-container { padding-left:.75rem; padding-right:.75rem; }
+  h1 { font-size:1.5rem!important; }
+  h2 { font-size:1.25rem!important; }
+  h3 { font-size:1.08rem!important; }
+  .case-title { font-size:1.45rem; }
+  .case-subtitle { font-size:13px; }
+  .stamp-block { padding:10px 12px; }
+  .stamp-row { font-size:10px; gap:8px; }
+  .sop-box { margin:10px 0 16px; padding:14px; }
+  .sop-box ol { padding-left:20px; }
+  .sop-box li { margin-bottom:7px; }
+  .roster-row { padding:9px 10px; }
+  .file-footer { text-align:left; }
+  [data-testid="stMetric"] { padding:9px; }
+  [data-testid="stMetricValue"] { font-size:1.15rem!important; }
+  [data-testid="stMetricLabel"] { font-size:.72rem!important; }
+  [data-testid="stPlotlyChart"] { margin-left:-6px; margin-right:-6px; width:calc(100% + 12px); }
+  [data-baseweb="select"] > div { min-height:42px; }
+  input { min-height:42px!important; }
+  button { min-height:42px; }
+}
+
+@media (max-width: 480px) {
+  .block-container { padding-left:.6rem; padding-right:.6rem; }
+  .case-title { font-size:1.3rem; }
+  .verdict-stamp { font-size:.78rem; }
+  .verdict-detail { font-size:.64rem; }
+  .sop-header { font-size:10px; }
+}
+
 </style>
 """, unsafe_allow_html=True)
 
